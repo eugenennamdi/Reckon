@@ -1,0 +1,42 @@
+name: Permissionless Chainlink Settlement Keeper
+
+on:
+  schedule:
+    # Run every 15 minutes to fix ATM strikes after commitEnd and settle Chainlink outcomes after resolveTime.
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: reckon-keeper-bsc
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  settle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install viem for keeper script
+        run: npm install --no-save --no-audit --no-fund viem
+
+      - name: Run permissionless Chainlink settlement keeper
+        env:
+          KEEPER_PRIVATE_KEY: ${{ secrets.KEEPER_PRIVATE_KEY }}
+          BSC_RPC_URL: ${{ secrets.BSC_RPC_URL }}
+        run: |
+          if [ -n "$KEEPER_PRIVATE_KEY" ]; then
+            node scripts/keeper.mjs --once --broadcast
+          else
+            echo "KEEPER_PRIVATE_KEY secret not configured; running read-only dry-run scan."
+            node scripts/keeper.mjs --once
+          fi

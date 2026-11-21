@@ -40,6 +40,15 @@
 | **ReckonSignalRegistry** | `0x0C357597B87dEabe952eBF8901748A4983812144` | [BscScan](https://bscscan.com/address/0x0C357597B87dEabe952eBF8901748A4983812144) |
 <!-- RECKON_DEPLOYMENTS_END -->
 
+### Verification & Live Mainnet Proofs
+
+- **Verified Source Code (BscScan + Sourcify `exact_match`):**
+  - `ReckonCore` (`solc 0.8.24`, `cancun`, 0% fee, ownerless): [BscScan `#code`](https://bscscan.com/address/0xb19c478D4378F6AffCE65a08B0eA1c6A123B257C#code) · [Sourcify](https://repo.sourcify.dev/56/0xb19c478D4378F6AffCE65a08B0eA1c6A123B257C)
+  - `ReckonSignalRegistry` (`solc 0.8.24`, `cancun`, 0% fee, ownerless): [BscScan `#code`](https://bscscan.com/address/0x0C357597B87dEabe952eBF8901748A4983812144#code) · [Sourcify](https://repo.sourcify.dev/56/0x0C357597B87dEabe952eBF8901748A4983812144)
+- **Genesis Agent ID Forecast (`reckon.ai` via `baw contract-call preview → confirm → execute`):**
+  - Round `#1` (`BNB/USD · Epoch #124673 · Starter 0.001 BNB`), Block `#134960169`, `allowanceChanges: []`, zero Binance risk flags: [`0xf883e0f7bc7162819879fe08be8c8fbe027feb04189d5e3310067f183c0930dc`](https://bscscan.com/tx/0xf883e0f7bc7162819879fe08be8c8fbe027feb04189d5e3310067f183c0930dc)
+- **24/7 Permissionless Chainlink Settlement Keeper:** Automated every 15 minutes via [`.github/workflows/keeper.yml`](./.github/workflows/keeper.yml) (`scripts/keeper.mjs`) so strikes and oracle outcomes settle permissionlessly within minutes of window close.
+
 ---
 
 ## Verified BNB Chain Mainnet Dependencies (`chainId = 56`)
