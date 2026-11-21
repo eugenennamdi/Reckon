@@ -66,7 +66,7 @@ const FEEDS = [
 ];
 
 const TIERS = [
-  { id: 0, label: "Starter", stakeBnb: "0.002", stakeWei: "2000000000000000" },
+  { id: 0, label: "Starter", stakeBnb: "0.001", stakeWei: "1000000000000000" },
   { id: 1, label: "Standard", stakeBnb: "0.005", stakeWei: "5000000000000000" },
   { id: 2, label: "Pro", stakeBnb: "0.01", stakeWei: "10000000000000000" },
 ];
@@ -561,6 +561,7 @@ async function searchPhaseBracket(client, feedAddr, aggAbi, phase, maxAggRound, 
         args: [(phase << 64n) | agg],
       })),
       allowFailure: true,
+      multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
     });
     for (let i = 0; i < unique.length; i++) {
       const item = res[i];
@@ -610,6 +611,7 @@ async function searchPhaseBracket(client, feedAddr, aggAbi, phase, maxAggRound, 
       args: [(phase << 64n) | agg],
     })),
     allowFailure: true,
+    multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
   });
   for (let i = 0; i < scanIds.length - 1; i++) {
     const cur = scanRes[i];

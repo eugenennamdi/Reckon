@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowUpRight } from "@phosphor-icons/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ReliabilityDiagramProps {
   handle: string;
   bucketCounts: number[];
   bucketHits: number[];
+  meanBrier?: number;
+  bssPct?: number;
+  competitiveRounds?: number;
+  isVerified?: boolean;
 }
 
 const DECILES = [
@@ -26,8 +31,29 @@ export function ReliabilityDiagram({
   handle,
   bucketCounts,
   bucketHits,
+  meanBrier,
+  bssPct,
+  competitiveRounds,
+  isVerified,
 }: ReliabilityDiagramProps) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  const shareUrl = (() => {
+    if (!handle || typeof meanBrier !== "number" || meanBrier <= 0) return null;
+    const brierStr = (meanBrier / 100_000_000).toFixed(4);
+    const bssStr =
+      typeof bssPct === "number" ? `${bssPct >= 0 ? "+" : ""}${bssPct.toFixed(1)}% BSS` : "";
+    const statusLabel = isVerified ? "Verified Forecaster" : "On-Chain Track Record";
+    const text = [
+      `${handle}.ai — ${statusLabel} on Reckon (BNB Chain)`,
+      `Brier ${brierStr}${bssStr ? ` (${bssStr})` : ""}${competitiveRounds ? ` · ${competitiveRounds} competitive 4h epochs` : ""}`,
+      `Ownerless, immutable, soulbound Agent ID calibration.`,
+      `#BinanceWalletHackathon #AgenticWallet`,
+    ].join("\n");
+    const appOrigin =
+      typeof window !== "undefined" ? window.location.origin : "https://reckon.markets";
+    return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(`${appOrigin}/leaderboard`)}`;
+  })();
 
   const width = 460;
   const height = 310;
@@ -242,7 +268,7 @@ export function ReliabilityDiagram({
           </text>
         </svg>
 
-        <div className="mt-3 flex min-h-[28px] items-center justify-between border-t border-border pt-3 font-mono text-[11px] tabular-nums">
+        <div className="mt-3 flex min-h-[28px] flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-[11px] tabular-nums">
           {hovered && hovered.freq !== null ? (
             <>
               <span className="text-foreground">
@@ -260,6 +286,17 @@ export function ReliabilityDiagram({
             <span className="text-muted-foreground">
               Hover a decile node to inspect exact on-chain hit rates.
             </span>
+          )}
+          {shareUrl && (
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 font-sans text-[11px] font-medium text-foreground/85 underline-offset-2 transition-colors hover:text-foreground hover:underline"
+            >
+              <span>Share scorecard on X</span>
+              <ArrowUpRight size={12} />
+            </a>
           )}
         </div>
       </CardContent>

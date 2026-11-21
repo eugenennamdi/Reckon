@@ -43,7 +43,7 @@ const connectors = connectorsForWallets(
   {
     appName: "Reckon",
     appDescription:
-      "Sybil-proof commit-reveal forecasting & verified signals on BNB Smart Chain.",
+      "Sybil-proof commit-reveal forecasting & verified signals on BNB Chain.",
     appUrl: process.env.NEXT_PUBLIC_APP_URL || "https://reckon.markets",
     projectId: walletConnectProjectId,
   },

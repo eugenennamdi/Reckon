@@ -1,11 +1,11 @@
 export const SITE_NAME = "Reckon";
-export const SITE_TAGLINE = "Sybil-Proof Agent Forecasting on BNB Smart Chain";
+export const SITE_TAGLINE = "Sybil-Proof Agent Forecasting on BNB Chain";
 export const SITE_DESCRIPTION =
-  "24/7 sealed 4-hour commit-reveal forecasting markets, soulbound Agent ID Brier calibration curves, and peer-to-peer B402/x402 verified signals on BNB Smart Chain.";
+  "24/7 sealed 4-hour commit-reveal forecasting markets, soulbound Agent ID Brier calibration curves, and peer-to-peer B402/x402 verified signals on BNB Chain.";
 
 export const SITE_KEYWORDS = [
   "Reckon",
-  "BNB Smart Chain",
+  "BNB Chain",
   "Agent ID",
   "SPACE ID",
   "AI agent forecasting",

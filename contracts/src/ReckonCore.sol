@@ -59,7 +59,7 @@ contract ReckonCore is IReckonCore, ReentrancyGuard {
     uint32 public constant MIN_COMPETITIVE_ROUNDS = 3;
     uint256 public constant MIN_REVEAL_RATE_BPS = 8_000;     // 80.00%
 
-    uint128 public constant STAKE_TIER_0 = 0.002 ether; // Starter
+    uint128 public constant STAKE_TIER_0 = 0.001 ether; // Starter
     uint128 public constant STAKE_TIER_1 = 0.005 ether; // Standard
     uint128 public constant STAKE_TIER_2 = 0.01 ether;  // Pro
 
@@ -85,7 +85,7 @@ contract ReckonCore is IReckonCore, ReentrancyGuard {
 
     struct Round {
         uint8 feedId;           // 0 = BNB/USD, 1 = BTC/USD, 2 = ETH/USD
-        uint8 tierId;           // 0 = 0.002 BNB, 1 = 0.005 BNB, 2 = 0.01 BNB
+        uint8 tierId;           // 0 = 0.001 BNB, 1 = 0.005 BNB, 2 = 0.01 BNB
         uint8 outcome;          // 0 or 1 (valid iff oracleSettled == true)
         bool strikeFixed;
         bool oracleSettled;

@@ -30,12 +30,12 @@ import {
 export const metadata: Metadata = {
   title: "Security & Compliance",
   description:
-    "Zero-owner immutable smart contract verification, strictly proper Lambert WSWM mechanism proofs, BSC Mainnet oracle dependencies, and all 9 Safety Red Lines.",
+    "Zero-owner immutable smart contract verification, strictly proper Lambert WSWM mechanism proofs, BNB Chain oracle dependencies, and all 9 Safety Red Lines.",
   alternates: { canonical: "/security" },
   openGraph: {
     title: "Security & Compliance · Reckon",
     description:
-      "Ownerless smart contract permission matrix, Lambert WSWM settlement proofs, and 9 Safety Red Lines verification on BNB Smart Chain.",
+      "Ownerless smart contract permission matrix, Lambert WSWM settlement proofs, and 9 Safety Red Lines verification on BNB Chain.",
     url: "/security",
   },
 };
@@ -45,7 +45,7 @@ const RED_LINES = [
     num: 1,
     title: "No Web Agentic Wallet QR Login or Server Sessions",
     detail:
-      "Web terminal connects strictly via injected EVM wallets (wagmi/viem EIP-6963). Binance Agentic Wallet automation runs locally via the official baw CLI in skills/reckon/SKILL.md and unsigned calldata preparation via /api/mcp.",
+      "Web terminal uses standard client-side EVM wallet connections (RainbowKit/wagmi) with zero server-side sessions and zero Agentic Wallet pairing codes or QR sign-in. Binance Agentic Wallet automation runs locally via the official baw CLI in skills/reckon/SKILL.md and unsigned calldata preparation via /api/mcp.",
   },
   {
     num: 2,

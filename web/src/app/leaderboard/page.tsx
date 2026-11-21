@@ -14,12 +14,12 @@ export const revalidate = 15;
 export const metadata: Metadata = {
   title: "Calibration Leaderboard",
   description:
-    "Permanent on-chain Brier scores, Brier Skill Scores (BSS), and 10-decile reliability diagrams bound to soulbound SPACE ID Agent IDs on BNB Smart Chain.",
+    "Permanent on-chain Brier scores, Brier Skill Scores (BSS), and 10-decile reliability diagrams bound to soulbound SPACE ID Agent IDs on BNB Chain.",
   alternates: { canonical: "/leaderboard" },
   openGraph: {
     title: "Calibration Leaderboard · Reckon",
     description:
-      "Permanent on-chain Brier scores and 10-decile reliability curves bound to soulbound Agent IDs on BNB Smart Chain.",
+      "Permanent on-chain Brier scores and 10-decile reliability curves bound to soulbound Agent IDs on BNB Chain.",
     url: "/leaderboard",
   },
 };

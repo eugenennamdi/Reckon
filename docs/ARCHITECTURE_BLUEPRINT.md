@@ -32,19 +32,14 @@ interface IAgentID {
     /// @notice On-chain reverse resolution! Returns bare handle WITHOUT ".ai" (e.g., "alice"), or "" if none.
     function handleOf(address owner) external view returns (string memory);
 
-    /// @notice Forward lookup from bare handle (e.g., "alice") to owner address (address(0) if unclaimed).
-    ///         COMPLIANCE WARNING (Red Line #9): NEVER expose arbitrary lookups in UI/API!
-    function ownerOfHandle(string calldata handle) external view returns (address);
-
     /// @notice Standard ERC-721 owner lookup where tokenId == uint256(keccak256(bytes(handle))).
+    ///         COMPLIANCE (Red Line #9): Reckon contracts, UI, API, and MCP NEVER expose arbitrary handle-to-address lookups.
     function ownerOf(uint256 tokenId) external view returns (address);
 }
 ```
 
 **Live On-Chain Confirmation (`handleOf` format):**
-- `ownerOfHandle("alice")` → `0xa506ac7069937571dc56c5f8fda53c4a729456c6` → `handleOf(...) == "alice"`, `balanceOf(...) == 1`
-- `ownerOfHandle("satoshi")` → `0x2f5622d809c0dacbdb4dc1c3e4d1bda251ab831c` → `handleOf(...) == "satoshi"`, `balanceOf(...) == 1`
-- `ownerOfHandle("reckon")` → `address(0)` (unclaimed as of `2026-11-19`)
+- Verified on BNB Chain Mainnet (`0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F`): active Agent ID holders return `balanceOf(agent) == 1` and bare lowercase `handleOf(agent)` without the `.ai` suffix; non-holders return `balanceOf(addr) == 0` and `""`.
 
 **Exact Non-Transferability & Permanence Proof (from `HandleRegistry.sol` lines 60–94):**
 - `_mintHandle` enforces a strict 1-to-1 invariant: reverts with `AddressHasHandle()` if `bytes(handleOf[to]).length != 0`, and `HandleTaken()` if `_ownerOf(uint256(label)) != address(0)`.
@@ -100,7 +95,7 @@ Verified from Binance Web3 Developer Docs (`web3.binance.com/en/dev-docs/product
 - **Solution — Pluggable Dual-Mode x402 v2 Facilitator Adapter:**
   1. **Binance B402 Mode (Auto-enabled once partner credentials are issued):** Calls `POST /papi/v2/b402/verify` and `POST /papi/v2/b402/settle` with RSA-SHA256 headers and attaches `extensions.bazaar` metadata so Reckon signal endpoints auto-index in the **B402 Bazaar**.
   2. **Self-Hosted Open BSC Facilitator Mode (Live on Day 1, Zero Blocker):** Verifies the exact same `PAYMENT-SIGNATURE` payload off-chain (cryptographic signature + `payTo == sellerAddress` + `amount >= requiredPrice` + time bounds + on-chain nonce check + `eth_call` simulation) and broadcasts settlement directly to BSC Mainnet (`transferWithAuthorization` for `USD1`/`U`, or `x402ExactPermit2Proxy.settle` for `USDT`/`USDC`) from a minimal-balance gas-sponsoring relayer wallet.
-- Offering `USD1` / `U` (`eip3009`, zero approvals) **and** `USDT` / `USDC` (`permit2`) in `accepts[]` guarantees every BSC Agentic Wallet holder can pay immediately, and `payTo` is set **directly to the verified forecaster's Agent ID address** (zero server custody!).
+- Offering `USD1` / `U` (`eip3009`, zero approvals) **and** `USDT` / `USDC` (`permit2`) in `accepts[]` ensures every BNB Chain Agentic Wallet holder can pay immediately, and `payTo` is set **directly to the verified forecaster's Agent ID address** (zero server custody!).
 
 ---
 
@@ -183,7 +178,7 @@ To eliminate **commit blackout windows**, **late-commit sniping**, and **permiss
   - `resolveTime` → `revealEnd = openTime + 12 hours` (**4h `REVEAL` strict post-outcome reveal window**)
   - `ORACLE_HALT_GRACE = 2 hours` (verified live-halt check via `cancelUnsettleableRound`), instant `cancelOracleGap` on proven `> 30m` Chainlink gaps (hardened across post-gap phase rollovers), and `EMERGENCY_CANCEL_DELAY = 7 days` black-swan safety valve (healthy Chainlink rounds remain settleable for 7 days and cannot be grief-cancelled at 2h!)
 - **Deduplicated Permissionless Creation (`createRound(feedId, epochId, tierId)` & 1-tx `commitEpoch(...)`):**
-  - Hardcoded 3 canonical 8-dec Chainlink feeds (`FeedId`: `0 = BNB/USD`, `1 = BTC/USD`, `2 = ETH/USD`) and 3 fixed native BNB stake tiers (`StakeTier`: `0 = 0.002 BNB`, `1 = 0.005 BNB`, `2 = 0.01 BNB`).
+  - Hardcoded 3 canonical 8-dec Chainlink feeds (`FeedId`: `0 = BNB/USD`, `1 = BTC/USD`, `2 = ETH/USD`) and 3 fixed native BNB stake tiers (`StakeTier`: `0 = 0.001 BNB`, `1 = 0.005 BNB`, `2 = 0.01 BNB`).
   - Unique key: `bytes32 roundKey = keccak256(abi.encode(feedId, epochId, tierId))` → maps to sequential `uint64 roundId` (`roundIdByKey[roundKey]`).
   - Can ONLY be instantiated while the epoch is currently `OPEN` (`block.timestamp >= openTime && block.timestamp < commitEnd`). No future pre-creation spam, no past resurrection.
   - `commitEpoch(feedId, epochId, tierId, commitment)` automatically creates the canonical round if not yet instantiated and commits in **one single transaction**.
@@ -244,7 +239,7 @@ bytes32 commitment = keccak256(
 - **On `getEffectiveProfile(address agent)` & `isVerifiedForecaster(address agent)`:**
   - Reads stored `profile` and dynamically folds in any finalized or missed-reveal entries among the `<= 27` items in `_pendingRoundIds[agent]` (deduplicating `competitiveRoundsScored` per `epochId` across both storage and pending entries so view and post-flush storage match identically in every settlement order, and penalizing `AWAITING_ORACLE && !revealed` the exact second `revealEnd` passes!).
   - **B402 Verified Forecaster On-Chain Gate (Closes Coin-Flip, Solo & Same-Epoch Multi-Tier Cheese):**
-    - Submitting `p = 50%` guarantees an exact `0.7500` Brier score regardless of outcome. Therefore, `isVerifiedForecaster(agent)` (and `eff.isVerified`) strictly requires:
+    - Submitting `p = 50%` yields an exact `0.7500` Brier score regardless of outcome. Therefore, `isVerifiedForecaster(agent)` (and `eff.isVerified`) strictly requires:
       1. `AGENT_ID.balanceOf(agent) > 0`
       2. `effectiveBrier >= 0.7600` (`cumulativeBrier >= roundsScored * 76_000_000`, strictly positive **+4.0% Brier Skill Score** above a 50% coin-flip; `>= 0.7800` earns the **ELITE** display tier!)
       3. `competitiveRoundsScored >= 3` (at least 3 finalized revealed rounds with `revealedCount >= 2` across **3 distinct 4-hour epochs** — neither solo `N = 1` rounds nor same-epoch 3-tier bets can farm badges!)
@@ -280,13 +275,13 @@ $$\text{Payout}_i = \left\lfloor \frac{W \cdot \big(C \cdot D + N \cdot S_i - \S
 2. **Strictly Positive / Zero Bad Debt:**
    Worst possible case ($S_i = 0.0199D$, $\bar{S} = 0.9999D$, $K = 0$): $1 + 0.0199 - 0.9999 = 0.02W > 0$. Payout can NEVER go negative!
 3. **Mathematically Proven Solvent & Zero Dust Lockup:**
-   $\sum_{i=1}^N (C D + N S_i - \Sigma S) = N C D \implies \sum_{i=1}^N \text{Payout}_i \le C \cdot W$. Tracking `remainingPool` and transferring `remainingPool` to the final claimer (`claimedCount == revealedCount - 1`) guarantees **0 wei dust stranded forever** while paying the final claimer at most $N - 1$ extra wei ($\le 10^{-16}$ BNB).
+   $\sum_{i=1}^N (C D + N S_i - \Sigma S) = N C D \implies \sum_{i=1}^N \text{Payout}_i \le C \cdot W$. Tracking `remainingPool` and transferring `remainingPool` to the final claimer (`claimedCount == revealedCount - 1`) ensures **0 wei dust stranded forever** while paying the final claimer at most $N - 1$ extra wei ($\le 10^{-16}$ BNB).
 4. **Non-Reveal Is Strictly Dominated in 100% of States:**
    - Worst honest reveal (`99%` when `Y=0`): recovers $\ge 0.02W + KW/N > 0$, records $S_i = 0.0199 > 0$, maintains `revealRate`.
    - Refusing to reveal: recovers **$0$**, permanently records **$S = 0.0000$**, drops `revealRate`, and risks losing B402 Verified Forecaster status.
 5. **Closing Chen / Devanur et al. (2014) WSWM Arbitrage Vectors:**
    In *Removing Arbitrage from Wagering Mechanisms* (EC 2014), Chen, Devanur, Pennock, and Wortman Vaughan demonstrated two classic attacks against open WSWM pools:
-   - **Public-Report Arbitrage** (observing other participants' forecasts before submitting to construct a risk-free arbitrage position): **Completely closed by sealed commit-reveal** — all forecasts remain hidden hashes until `resolveTime`, and `strikePrice` is fixed at `commitEnd` after all commits close.
+   - **Public-Report Arbitrage** (observing other participants' forecasts before submitting to construct an arbitrage position): **Completely closed by sealed commit-reveal** — all forecasts remain hidden hashes until `resolveTime`, and `strikePrice` is fixed at `commitEnd` after all commits close.
    - **Sybil Bracketing / Multi-Account Hedging** (splitting stakes across multiple wallets with opposing extreme forecasts to exploit pool convexity or farm one lucky track record): **Completely closed by Binance's 1-per-verified-account soulbound Agent ID (`HandleRegistry`)** — each account holds at most one permanent, non-transferable Agent ID and can submit at most one commit per round (`1 Agent ID = 1 Commit`). Removing Agent ID re-opens Sybil bracketing and breaks the protocol's game-theoretic foundation.
 
 ---
@@ -310,7 +305,7 @@ $$\text{Payout}_i = \left\lfloor \frac{W \cdot \big(C \cdot D + N \cdot S_i - \S
 | **1** | **Sybil / Burner Wallet Cherry-Picking & WSWM Bracketing** | Attacker runs 50 wallets to cherry-pick winners or bracket WSWM forecasts (`1%` vs `99%`, Chen/Devanur 2014). | Hard on-chain gate `AGENT_ID.balanceOf(msg.sender) > 0` + permanent `handleOf(msg.sender)` binding + 1 commit per Agent ID per round. `HandleRegistry` is 1-per-verified-account and permanently non-transferable & non-burnable (`Soulbound()`). |
 | **2** | **Late-Commit Sniping & Public-Report Arbitrage** | Late committers exploit price movement during `OPEN` before `commitEnd`, or observe other agents' forecasts. | **Forward-Start ATM Strike:** `strikePrice` is fixed **at `commitEnd`** (not at creation) via permissionless Chainlink `getRoundData` bracketing. All forecasts remain sealed hashes until `resolveTime`. |
 | **3** | **Hindsight Selective Non-Reveal & Score-Dodging** | Agent skips `reveal()` after seeing outcome, or skips `claim()` to dodge bad score update; or gets locked out by old pending rounds. | Non-reveal forfeits 100% of stake AND immediately incurs `S = 0.0000` (worse than worst honest `0.0199`). `pendingRoundIds` (`<= 27`, 3 full 9-slot 4h epochs) auto-flushes settled/expired entries inside `commit()` and is folded live into `getEffectiveProfile()` the second `revealEnd` passes. |
-| **4** | **50% Coin-Flip Cheese & Solo Badge Farming** | Submitting `p = 50%` guarantees `0.7500` Brier with zero skill; solo `N=1` rounds refund 100% stake risk-free. | `isVerifiedForecaster()` requires `effectiveBrier >= 0.7600` (+4.0% Brier Skill Score over coin-flip; `>= 0.7800` for Elite tier), `>= 3` finalized **competitive** rounds (`revealedCount >= 2`) across distinct 4h epochs, and `revealRate >= 80%`. |
+| **4** | **50% Coin-Flip Cheese & Solo Badge Farming** | Submitting `p = 50%` yields `0.7500` Brier with zero skill; solo `N=1` rounds refund 100% stake with zero variance. | `isVerifiedForecaster()` requires `effectiveBrier >= 0.7600` (+4.0% Brier Skill Score over coin-flip; `>= 0.7800` for Elite tier), `>= 3` finalized **competitive** rounds (`revealedCount >= 2`) across distinct 4h epochs, and `revealRate >= 80%`. |
 | **5** | **Lost Local Salt (Web or CLI)** | User clears browser storage and loses stake + gets penalized. | (1) CLI saves salts atomically to `~/.reckon/salts.json` (`0600`) BEFORE `execute`. (2) Web persists append-only in `localStorage` + forces copyable recovery token (`RKN1-...`) & one-click JSON download modal BEFORE wallet popup. (3) Never rely on MPC EIP-712 determinism (TSS nonces are randomized!). |
 | **6** | **Chainlink Timestamp Drift, Creation Spam & Feed Halt** | Keeper picks favorable timestamp; attacker spams rounds; feed outage traps BNB. | Rolling 4h UTC candle grid deduplicated by `keccak256(feedId, epochId, tierId)` (only current open epoch allowed). Permissionless Chainlink `getRoundData` bracketing verifies both `strikePrice` (at `commitEnd`) and `settlePrice` (at `resolveTime`) with explicit aggregator phase-rollover handling. Healthy feeds cannot be grief-cancelled (`OracleStillHealthy`); proven `>30m` gaps (`cancelOracleGap`), verified 2h feed halts (`cancelUnsettleableRound`), and 7d black-swan fallback return 100% stake with **zero** penalty. |
 | **7** | **Exact Price Tie (`price == strike`)** | Ambiguous dispute over `>` vs `>=`. | Explicitly hardcoded & documented everywhere: `outcome = (settledPrice >= strikePrice) ? 1 : 0`. |
@@ -335,7 +330,7 @@ $$\text{Payout}_i = \left\lfloor \frac{W \cdot \big(C \cdot D + N \cdot S_i - \S
 | **4** | Open-source & BscScan-verified contracts with explicit, minimal owner permissions | Public MIT GitHub repo + BscScan & Sourcify verification. `ReckonCore.sol` is **100% ownerless & immutable** (ZERO admin withdraw, ZERO pause, ZERO upgrade proxy). Documented in `README.md`, NatSpec, and UI `/security`. |
 | **5** | No Binance / BNB brand impersonation | Project name **Reckon** (zero "Binance" or "BNB" in brand/domain/contracts). Explicit non-affiliation footer disclaimer. |
 | **6** | No collection of sensitive credentials (seeds, private keys, API secrets, pairing codes) | Zero secret inputs anywhere. Commit salts remain strictly client-side (`localStorage` / `~/.reckon/salts.json`) and never touch any server. |
-| **7** | No promised returns ("passive income", "automatic money-making", etc.) | Strict copy audit & CI grep check forbidding prohibited profit/yield phrases across code, docs, UI, and skill files. |
+| **7** | No return or profit promises | Strict copy audit & CI grep check forbidding prohibited profit/yield phrases across code, docs, UI, and skill files. |
 | **8** | Mandatory risk warnings on pages involving trading / financial stakes | Prominent, non-dismissible risk disclosure banner on all forecasting & signal pages + pre-commit confirmation checklist + DYOR notice in `SKILL.md`. |
 | **9** | Do NOT package Agent ID as a "wallet lookup by name" tool | Zero generic `name.ai → address` lookup feature. Only opt-in Reckon participants appear on protocol leaderboards, indexed strictly from Reckon contract events. |
 
@@ -359,7 +354,7 @@ Early sifting across 1,000–2,000+ entries will combine automated on-chain anal
    - Top-level `README.md` with: Verified BSC Mainnet Contract Table (direct BscScan links), explicit "Security & Compliance Disclosure" section mapping all 9 Red Lines, exact Solidity math spec, quickstart for both Web & `npx skills add` CLI, and live metrics badge.
    - Clean, exhaustive NatSpec comments on every Solidity function + `SECURITY.md` documenting zero-owner immutability + Slither/Foundry invariant check summary.
 6. **Organic On-Chain Traction (Eligibility Gate: ≥30 Unique Agent IDs → Target: 100+ Unique Agent IDs + Pioneer Award):**
-   - Ultra-accessible `0.002 BNB` (~$1.20) Starter rounds so any Agent ID holder can join with minimal risk.
+   - Ultra-accessible `0.001 BNB` (~$0.55) Starter rounds so any Agent ID holder can join with minimal friction.
    - Natural 3-tx organic loop (`commit` → `reveal` → `claim`) + optional Layer 3 B402 purchases = high authentic engagement per Agent ID with zero wash trading.
    - Launch a transparent 10-day public **Calibration Leaderboard Challenge** on X using `#BinanceWalletHackathon` and `#AgenticWallet` (also encouraging community members to write analyses eligible for Binance's 2,000 USDC Community Promotion Campaign!).
 

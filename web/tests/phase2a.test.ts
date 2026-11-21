@@ -141,8 +141,8 @@ function makeMockChainReader(state: MockChainState): ChainReader {
               feedSymbol: f === 0 ? "BNB/USD" : f === 1 ? "BTC/USD" : "ETH/USD",
               tierId: t,
               tierLabel: t === 0 ? "Starter" : t === 1 ? "Standard" : "Pro",
-              stakeWei: t === 0 ? "2000000000000000" : t === 1 ? "5000000000000000" : "10000000000000000",
-              stakeBnb: t === 0 ? "0.002" : t === 1 ? "0.005" : "0.01",
+              stakeWei: t === 0 ? "1000000000000000" : t === 1 ? "5000000000000000" : "10000000000000000",
+              stakeBnb: t === 0 ? "0.001" : t === 1 ? "0.005" : "0.01",
               state: "OPEN",
               instantiated: false,
               ...timing,
@@ -227,8 +227,8 @@ function makeLockedRound(roundId: number, feedId = 0, epochId = 80000, tierId = 
     epochId,
     tierId,
     tierLabel: "Starter",
-    stakeWei: "2000000000000000",
-    stakeBnb: "0.002",
+    stakeWei: "1000000000000000",
+    stakeBnb: "0.001",
     state: "LOCKED",
     instantiated: true,
     openTime: nowSec - 4000,
@@ -1117,11 +1117,11 @@ describe("Phase 2A — Commitments, Attestations, Dual-Mode B402/x402 & APIs", (
     assert.equal(agentRoundsJson.pendingRounds.length, 1);
     assert.equal(agentRoundsJson.pendingRounds[0].roundId, 1);
 
-    // 5. /api/mcp discovery + JSON-RPC 2.0 tools
+    // 5. /api/mcp discovery + JSON-RPC 2.0 full 8-tool lifecycle
     const mcpGet = await getMcpRoute();
     assert.equal(mcpGet.status, 200);
     const mcpManifest = (await mcpGet.json()) as { tools: Array<{ name: string }> };
-    assert.equal(mcpManifest.tools.length, 5);
+    assert.equal(mcpManifest.tools.length, 8);
 
     const mcpList = await postMcpRoute(
       new Request("http://localhost:3000/api/mcp", {
@@ -1133,6 +1133,28 @@ describe("Phase 2A — Commitments, Attestations, Dual-Mode B402/x402 & APIs", (
     assert.equal(mcpList.status, 200);
     const mcpListBody = (await mcpList.json()) as { result: { tools: Array<{ name: string }> } };
     assert.ok(mcpListBody.result.tools.some((t) => t.name === "reckon_prepare_commit"));
+    assert.ok(mcpListBody.result.tools.some((t) => t.name === "reckon_prepare_reveal"));
+    assert.ok(mcpListBody.result.tools.some((t) => t.name === "reckon_prepare_claim"));
+    assert.ok(mcpListBody.result.tools.some((t) => t.name === "reckon_prepare_register_signal"));
+
+    const mcpSignals = await postMcpRoute(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 11,
+          method: "tools/call",
+          params: { name: "reckon_get_signals", arguments: { integrity: "PENDING" } },
+        }),
+      }),
+    );
+    assert.equal(mcpSignals.status, 200);
+    const mcpSignalsBody = (await mcpSignals.json()) as {
+      result: { isError: boolean; structuredContent: { signals: Array<{ id: string }> } };
+    };
+    assert.equal(mcpSignalsBody.result.isError, false);
+    assert.equal(mcpSignalsBody.result.structuredContent.signals.length, 1);
 
     const mcpCommit = await postMcpRoute(
       new Request("http://localhost:3000/api/mcp", {
@@ -1157,10 +1179,90 @@ describe("Phase 2A — Commitments, Attestations, Dual-Mode B402/x402 & APIs", (
     );
     assert.equal(mcpCommit.status, 200);
     const mcpCommitBody = (await mcpCommit.json()) as {
-      result: { isError: boolean; structuredContent: { bawPreviewCommand: string; calldata: Hex } };
+      result: {
+        isError: boolean;
+        structuredContent: { valueWei: string; bawPreviewCommand: string; calldata: Hex };
+      };
     };
     assert.equal(mcpCommitBody.result.isError, false);
+    assert.equal(mcpCommitBody.result.structuredContent.valueWei, "1000000000000000");
     assert.ok(mcpCommitBody.result.structuredContent.bawPreviewCommand.includes("baw contract-call preview"));
     assert.ok(mcpCommitBody.result.structuredContent.calldata.startsWith("0x"));
+
+    const mcpReveal = await postMcpRoute(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 3,
+          method: "tools/call",
+          params: {
+            name: "reckon_prepare_reveal",
+            arguments: {
+              roundId: 1,
+              probBps: 7200,
+              salt: `0x${"bb".repeat(32)}`,
+              agent: SELLER_ACCOUNT.address,
+            },
+          },
+        }),
+      }),
+    );
+    const mcpRevealBody = (await mcpReveal.json()) as {
+      result: { isError: boolean; structuredContent: { action: string; calldata: Hex } };
+    };
+    assert.equal(mcpRevealBody.result.isError, false);
+    assert.equal(mcpRevealBody.result.structuredContent.action, "reveal");
+    assert.ok(mcpRevealBody.result.structuredContent.calldata.startsWith("0x"));
+
+    const mcpClaim = await postMcpRoute(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 4,
+          method: "tools/call",
+          params: {
+            name: "reckon_prepare_claim",
+            arguments: { roundId: 1, mode: "claim", agent: SELLER_ACCOUNT.address },
+          },
+        }),
+      }),
+    );
+    const mcpClaimBody = (await mcpClaim.json()) as {
+      result: { isError: boolean; structuredContent: { action: string; calldata: Hex } };
+    };
+    assert.equal(mcpClaimBody.result.isError, false);
+    assert.equal(mcpClaimBody.result.structuredContent.action, "claim");
+
+    const mcpRegister = await postMcpRoute(
+      new Request("http://localhost:3000/api/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 5,
+          method: "tools/call",
+          params: {
+            name: "reckon_prepare_register_signal",
+            arguments: {
+              endpointUrl: "https://reckon.markets/api/signals",
+              priceUsd: "0.50",
+              token: "USD1",
+              bio: "Macro volatility forecaster",
+              agent: SELLER_ACCOUNT.address,
+            },
+          },
+        }),
+      }),
+    );
+    const mcpRegisterBody = (await mcpRegister.json()) as {
+      result: { isError: boolean; structuredContent: { action: string; calldata: Hex } };
+    };
+    assert.equal(mcpRegisterBody.result.isError, false);
+    assert.equal(mcpRegisterBody.result.structuredContent.action, "registerSignal");
+    assert.ok(mcpRegisterBody.result.structuredContent.calldata.startsWith("0x"));
   });
 });

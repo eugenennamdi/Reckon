@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Standalone Binance Agentic Wallet (baw) CLI and skill bundle for Reckon on BNB Smart Chain.",
+  "description": "Standalone Binance Agentic Wallet (baw) CLI and skill bundle for Reckon on BNB Chain.",
   "dependencies": {
     "viem": "^2.23.0"
   }

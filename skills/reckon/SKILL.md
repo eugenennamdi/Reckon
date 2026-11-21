@@ -1,11 +1,11 @@
 ---
 name: reckon
-description: Participate in Reckon Sybil-proof 4-hour commit-reveal forecasting rounds on BNB Smart Chain (`ReckonCore`) and purchase or publish B402/x402 v2 verified signals (`ReckonSignalRegistry`) using Binance Agentic Wallet (`baw`) or MCP (`/api/mcp`).
+description: Participate in Reckon Sybil-proof 4-hour commit-reveal forecasting rounds on BNB Chain (`ReckonCore`) and purchase or publish B402/x402 v2 verified signals (`ReckonSignalRegistry`) using Binance Agentic Wallet (`baw`) or MCP (`/api/mcp`).
 ---
 
 # Reckon Forecasting & B402 Signal Skill
 
-> **Risk Warning & Non-Affiliation:** Forecasting stakes in native BNB are at risk of loss. Poorly calibrated predictions or failure to reveal before `revealEnd` result in partial or total stake forfeiture. Purchasing B402/x402 signals does not ensure accuracy or profit. Always DYOR. Reckon is an independent open-source protocol built on BNB Smart Chain and is not affiliated with or endorsed by Binance.
+> **Risk Warning & Non-Affiliation:** Forecasting stakes in native BNB are at risk of loss. Poorly calibrated predictions or failure to reveal before `revealEnd` result in partial or total stake forfeiture. Purchasing B402/x402 signals does not ensure accuracy or profit. Always DYOR. Reckon is an independent open-source protocol built on BNB Chain and is not affiliated with or endorsed by Binance.
 
 ## Standalone Installation
 
@@ -43,11 +43,11 @@ Run `node skills/reckon/scripts/reckon-cli.mjs preflight --json` or execute the 
    ```
    - Must report `data.status === "CONNECTED"`. Note: `baw wallet status` does NOT return EVM addresses.
 
-2. **BSC Address Lookup:**
+2. **BNB Chain Address Lookup:**
    ```bash
    baw wallet address --json
    ```
-   - Extract the entry where `binanceChainId === "56"` (BSC Mainnet) from `data.addresses[]`.
+   - Extract the entry where `binanceChainId === "56"` (BNB Chain Mainnet) from `data.addresses[]`.
 
 3. **Soulbound Agent ID Check:**
    ```bash
@@ -56,13 +56,15 @@ Run `node skills/reckon/scripts/reckon-cli.mjs preflight --json` or execute the 
    - Verify `data.claimed === true` and a non-empty `data.handle`.
    - **Error `20003008` Handling:** `{ "success": false, "error": { "code": 20003008 } }` is a transient Agent ID backend error, **NOT** an unclaimed wallet. Cache may lag up to 60 seconds after minting. **Never poll `baw wallet agent-id` in a loop** — stop and inform the user so they can retry manually.
 
-4. **Developer Mode Check (Required Before `contract-call` or `sign-message`):**
+4. **Developer Mode & Session Expiry Check (Required Before `contract-call` or `sign-message`):**
    ```bash
    baw wallet settings --json
    ```
    - Verify `data.devMode.enabled === true` AND `data.devMode.expiresAt > now`.
+   - Check `sessionExpireTime` and inform the user up front if the wallet login expires within a few hours (sign-out is silent).
    - If disabled or expired (`351802`), instruct the user to enable Developer Mode inside Binance App: `Agentic Wallet management page -> Settings -> Developer Mode -> Risk Warning -> App signature`.
    - If `data.devMode.balanceExceeded === true` or error `351804` occurs, wallet balance exceeds the Developer Mode safety cap; stop and inform the user.
+   - Verify `baw` CLI version meets `>= 1.12.0` (`baw cli-check --required-version 1.12.0 --json`).
 
 ---
 
@@ -90,7 +92,7 @@ Binance Agentic Wallet signs via keyless MPC/TSS where ECDSA nonces `k` are rand
      --json
    ```
    - Feeds: `0 = BNB/USD`, `1 = BTC/USD`, `2 = ETH/USD`.
-   - Tiers: `0 = 0.002 BNB` (`2000000000000000` wei), `1 = 0.005 BNB`, `2 = 0.01 BNB`.
+   - Tiers: `0 = 0.001 BNB` (`1000000000000000` wei), `1 = 0.005 BNB`, `2 = 0.01 BNB`.
    - Probabilities: integer `probBps` in `[100, 9900]` (`1.00%` to `99.00%`).
 
 2. Run the emitted preview command verbatim (integer `--value` in wei, never decimal BNB, never pass `--gasLimit` or gas price flags):
@@ -220,9 +222,12 @@ Once `ReckonCore.isVerifiedForecaster(agent) === true` (`effectiveBrier >= 0.760
 
 ## Step 4: Binance Agent OS / MCP Server (`/api/mcp`)
 
-Reckon exposes a read-only + unsigned-calldata-preparation Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` (`GET /api/mcp` for manifest discovery) with five Red-Line-compliant tools:
+Reckon exposes a read-only + unsigned-calldata-preparation Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` (`GET /api/mcp` for manifest discovery) with eight Red-Line-compliant tools covering the entire zero-clone forecasting lifecycle:
 - `reckon_get_rounds` — Live Chainlink prices, 4h canonical slots, and active pending rounds for an explicit EVM address.
 - `reckon_get_leaderboard` — Global Brier calibration rankings (`0.7600` Verified / `0.7800` Elite) and registered providers.
-- `reckon_get_signals` — Active x402 signal listings with live `MATCH`/`MISMATCH`/`NO_REVEAL` anti-fraud tags.
+- `reckon_get_signals` — Active x402 signal listings with live `PENDING` / `VERIFIED_MATCH` / `MISMATCH` / `UNREVEALED` / `ORACLE_CANCELLED` anti-fraud integrity tags.
 - `reckon_prepare_commit` — Unsigned `commitEpoch` calldata + `baw contract-call preview` command.
 - `reckon_prepare_settle` — Historical Chainlink bracket search + unsigned settlement calldata + `baw contract-call preview` command.
+- `reckon_prepare_reveal` — Unsigned `reveal(roundId, probBps, salt)` calldata + `baw contract-call preview` command.
+- `reckon_prepare_claim` — Auto-detects `claim(roundId)` vs `claimRefund(roundId)` + unsigned calldata + `baw contract-call preview` command.
+- `reckon_prepare_register_signal` — Unsigned `ReckonSignalRegistry.registerSignal(...)` calldata + `baw contract-call preview` command.

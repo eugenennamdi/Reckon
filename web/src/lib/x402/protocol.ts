@@ -5,6 +5,7 @@ import {
   FEEDS,
   STAKE_TIERS,
   X402_EXACT_PERMIT2_PROXY,
+  ZERO_ADDRESS,
   findStablecoin,
   type AssetTransferMethod,
 } from "@/lib/reckon/constants";
@@ -14,7 +15,7 @@ export interface X402PaymentExtra {
   name: string;
   version: string;
   assetTransferMethod: AssetTransferMethod;
-  signerAddress: Address;
+  signerAddress?: Address;
   spenderAddress?: Address;
 }
 
@@ -180,12 +181,13 @@ export function buildPaymentRequired(params: {
     const override = b402SupportedExtras?.[coin.address.toLowerCase()];
     const method = override?.assetTransferMethod ?? coin.assetTransferMethod;
     const signerAddress = override?.signerAddress ?? facilitatorSignerAddress;
+    const hasSigner = signerAddress && signerAddress.toLowerCase() !== ZERO_ADDRESS.toLowerCase();
     const isPermit2 = method === "permit2" || method === "permit2-exact";
     const extra: X402PaymentExtra = {
       name: override?.name ?? coin.name,
       version: override?.version ?? coin.version,
       assetTransferMethod: method,
-      signerAddress,
+      ...(hasSigner ? { signerAddress } : {}),
       ...(isPermit2
         ? { spenderAddress: override?.spenderAddress ?? coin.spenderAddress ?? X402_EXACT_PERMIT2_PROXY }
         : {}),

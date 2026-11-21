@@ -59,10 +59,10 @@ contract ReckonSignalRegistryTest is Test {
             vm.warp(uint256(ep) * core.EPOCH_DURATION() + 10);
             bytes32 cA = core.computeCommitment(0, ep, 0, alice, 8500, bytes32(uint256(i + 1)));
             vm.prank(alice);
-            uint64 rId = core.commitEpoch{value: 0.002 ether}(0, ep, 0, cA);
+            uint64 rId = core.commitEpoch{value: 0.001 ether}(0, ep, 0, cA);
             bytes32 cB = core.computeCommitment(0, ep, 0, bob, 4000, bytes32(uint256(i + 101)));
             vm.prank(bob);
-            core.commit{value: 0.002 ether}(rId, cB);
+            core.commit{value: 0.001 ether}(rId, cB);
 
             ReckonCore.Round memory r = core.getRound(rId);
             uint80 s1 = bnbFeed.makeRoundId(1, ep * 10 + 1);
@@ -182,10 +182,10 @@ contract ReckonSignalRegistryTest is Test {
             vm.warp(uint256(ep) * core.EPOCH_DURATION() + 10);
             bytes32 cBob = core.computeCommitment(0, ep, 0, bob, 9500, bytes32(uint256(k)));
             vm.prank(bob);
-            uint64 rId = core.commitEpoch{value: 0.002 ether}(0, ep, 0, cBob);
+            uint64 rId = core.commitEpoch{value: 0.001 ether}(0, ep, 0, cBob);
             bytes32 cAli = core.computeCommitment(0, ep, 0, alice, 8500, bytes32(uint256(k + 50)));
             vm.prank(alice);
-            core.commit{value: 0.002 ether}(rId, cAli);
+            core.commit{value: 0.001 ether}(rId, cAli);
             ReckonCore.Round memory r = core.getRound(rId);
             uint80 s1 = bnbFeed.makeRoundId(1, ep * 10 + 1);
             uint80 s2 = bnbFeed.makeRoundId(1, ep * 10 + 2);
@@ -229,10 +229,10 @@ contract ReckonSignalRegistryTest is Test {
         vm.warp(uint256(ep4) * core.EPOCH_DURATION() + 10);
         bytes32 cA4 = core.computeCommitment(0, ep4, 0, alice, 8500, bytes32(uint256(99)));
         vm.prank(alice);
-        uint64 r4 = core.commitEpoch{value: 0.002 ether}(0, ep4, 0, cA4);
+        uint64 r4 = core.commitEpoch{value: 0.001 ether}(0, ep4, 0, cA4);
         bytes32 cB4 = core.computeCommitment(0, ep4, 0, bob, 5000, bytes32(uint256(100)));
         vm.prank(bob);
-        core.commit{value: 0.002 ether}(r4, cB4);
+        core.commit{value: 0.001 ether}(r4, cB4);
 
         ReckonCore.Round memory r = core.getRound(r4);
         vm.warp(r.resolveTime + 60);

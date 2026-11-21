@@ -11,7 +11,7 @@ export const revalidate = 15;
 export const metadata: Metadata = {
   title: "Verified Signal Desk",
   description:
-    "Direct peer-to-peer B402 / x402 v2 forecasting signal marketplace gated on live on-chain Brier calibration on BNB Smart Chain.",
+    "Direct peer-to-peer B402 / x402 v2 forecasting signal marketplace gated on live on-chain Brier calibration on BNB Chain.",
   alternates: { canonical: "/signals" },
   openGraph: {
     title: "Verified Signal Desk · Reckon",

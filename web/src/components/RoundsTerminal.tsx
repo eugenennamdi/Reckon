@@ -6,18 +6,22 @@ import {
   ArrowCounterClockwise,
   CaretLeft,
   CaretRight,
+  Check,
   CheckCircle,
+  Copy,
   Info,
   Key,
   Lightning,
   LockSimple,
+  Robot,
   Scales,
+  TerminalWindow,
   UploadSimple,
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
-import { formatEther, type Address, type Hex } from "viem";
+import { encodeFunctionData, formatEther, getAddress, isAddress, type Address, type Hex } from "viem";
 import {
   useAccount,
   usePublicClient,
@@ -27,6 +31,7 @@ import {
 import { agentIdAbi, reckonCoreAbi } from "@/lib/abi";
 import type { LiveFeedPrice, RoundSnapshot } from "@/lib/reckon/chain";
 import {
+  encodeRecoveryToken,
   epochTiming,
   formatUsdPrice8,
   type SaltRecoveryRecord,
@@ -286,11 +291,40 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
   });
 
   const [probPct, setProbPct] = useState<number>(65);
+  const [execMode, setExecMode] = useState<"baw" | "browser">("baw");
+  const [agentWalletInput, setAgentWalletInput] = useState<string>("");
+  const [generatedBawBundle, setGeneratedBawBundle] = useState<{
+    slotKey: string;
+    agent: Address;
+    probBps: number;
+    recoveryToken: string;
+    previewCommand: string;
+  } | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const [pendingSaltRecord, setPendingSaltRecord] = useState<SaltRecoveryRecord | null>(null);
   const [manualRevealToken, setManualRevealToken] = useState("");
   const [importOpen, setImportOpen] = useState(false);
   const [importInput, setImportInput] = useState("");
   const [saltRefreshTick, setSaltRefreshTick] = useState(0);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem("reckon:agentic-wallet-address");
+      if (saved && isAddress(saved)) setAgentWalletInput(saved);
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  const parsedBawAddress: Address | undefined = useMemo(() => {
+    const trimmed = agentWalletInput.trim();
+    if (!isAddress(trimmed)) return undefined;
+    try {
+      return getAddress(trimmed);
+    } catch {
+      return undefined;
+    }
+  }, [agentWalletInput]);
 
   const { data: agentIdBalance } = useReadContract({
     address: AGENT_ID_ADDRESS,
@@ -302,10 +336,41 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
   });
   const hasAgentId = typeof agentIdBalance === "bigint" && agentIdBalance > 0n;
 
+  const { data: bawAgentIdBalance } = useReadContract({
+    address: AGENT_ID_ADDRESS,
+    abi: agentIdAbi,
+    functionName: "balanceOf",
+    args: parsedBawAddress ? [parsedBawAddress] : undefined,
+    chainId: BSC_CHAIN_ID,
+    query: { enabled: Boolean(parsedBawAddress) },
+  });
+  const { data: bawAgentHandleRaw } = useReadContract({
+    address: AGENT_ID_ADDRESS,
+    abi: agentIdAbi,
+    functionName: "handleOf",
+    args: parsedBawAddress ? [parsedBawAddress] : undefined,
+    chainId: BSC_CHAIN_ID,
+    query: { enabled: Boolean(parsedBawAddress) },
+  });
+  const bawHasAgentId =
+    typeof bawAgentIdBalance === "bigint" &&
+    bawAgentIdBalance > 0n &&
+    typeof bawAgentHandleRaw === "string" &&
+    bawAgentHandleRaw.length > 0;
+  const bawAgentHandle = typeof bawAgentHandleRaw === "string" ? bawAgentHandleRaw : "";
+
+  useEffect(() => {
+    if (isConnected && hasAgentId) {
+      setExecMode("browser");
+    }
+  }, [isConnected, hasAgentId]);
+
+  const activeQueryAgent = address ?? parsedBawAddress;
+
   const refreshRounds = useCallback(async () => {
     try {
       const qs = new URLSearchParams({ epochs: "4" });
-      if (address) qs.set("agent", address);
+      if (activeQueryAgent) qs.set("agent", activeQueryAgent);
       if (beforeEpoch !== null) qs.set("beforeEpoch", String(beforeEpoch));
       const res = await fetch(`/api/rounds?${qs.toString()}`, { cache: "no-store" });
       if (res.ok) {
@@ -315,16 +380,16 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
     } catch {
       // ignore transient network errors on background poll
     }
-  }, [address, beforeEpoch]);
+  }, [activeQueryAgent, beforeEpoch]);
 
   useEffect(() => {
     // Skip redundant immediate fetch on initial SSR hydration unless wallet or epoch page changed
-    if (address || beforeEpoch !== null) {
+    if (activeQueryAgent || beforeEpoch !== null) {
       void refreshRounds();
     }
     const poll = setInterval(refreshRounds, 15_000);
     return () => clearInterval(poll);
-  }, [address, beforeEpoch, refreshRounds]);
+  }, [activeQueryAgent, beforeEpoch, refreshRounds]);
 
   const pendingRounds = useMemo(() => data.pendingRounds ?? [], [data.pendingRounds]);
 
@@ -369,17 +434,17 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
   }, [data.prices, selectedRound]);
 
   const savedSalt = useMemo(() => {
-    if (!selectedRound || !address) return null;
+    if (!selectedRound || !activeQueryAgent) return null;
     void saltRefreshTick;
     return findSaltForSlot({
-      agent: address,
+      agent: activeQueryAgent,
       coreAddress: data.coreAddress,
       feedId: selectedRound.feedId,
       epochId: selectedRound.epochId,
       tierId: selectedRound.tierId,
       commitment: selectedRound.agentEntry?.commitment,
     });
-  }, [selectedRound, address, data.coreAddress, saltRefreshTick]);
+  }, [selectedRound, activeQueryAgent, data.coreAddress, saltRefreshTick]);
 
   const probBps = Math.max(
     MIN_PROB_BPS,
@@ -593,28 +658,107 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
     }
   };
 
+  const handleCopyText = async (key: string, value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(key);
+      toast.success("Copied to clipboard", { description: label });
+      setTimeout(() => setCopiedField(null), 1600);
+    } catch {
+      toast.error("Clipboard access denied");
+    }
+  };
+
+  const handleAgentWalletChange = (val: string) => {
+    setAgentWalletInput(val);
+    setGeneratedBawBundle(null);
+    const trimmed = val.trim();
+    if (isAddress(trimmed)) {
+      try {
+        window.localStorage.setItem("reckon:agentic-wallet-address", getAddress(trimmed));
+      } catch {
+        // ignore storage errors
+      }
+    }
+  };
+
+  const handleGenerateBawCommit = () => {
+    if (!selectedRound || !parsedBawAddress) return;
+    if (!data.deployed) {
+      toast.error("ReckonCore mainnet deployment is pending sync");
+      return;
+    }
+    const record = createSaltRecord({
+      chainId: BSC_CHAIN_ID,
+      coreAddress: data.coreAddress,
+      agent: parsedBawAddress,
+      feedId: selectedRound.feedId,
+      epochId: selectedRound.epochId,
+      tierId: selectedRound.tierId,
+      roundId: selectedRound.roundId,
+      probBps,
+    });
+    saveSaltRecord(record);
+    setSaltRefreshTick((t) => t + 1);
+    const inputData = encodeFunctionData({
+      abi: reckonCoreAbi,
+      functionName: "commitEpoch",
+      args: [record.feedId, BigInt(record.epochId), record.tierId, record.commitment],
+    });
+    const previewCommand = `baw contract-call preview --binanceChainId ${BSC_CHAIN_ID} --from ${parsedBawAddress} --to ${data.coreAddress} --value ${selectedRound.stakeWei} --inputData ${inputData} --json`;
+    setGeneratedBawBundle({
+      slotKey: `${selectedRound.epochId}:${selectedRound.feedId}:${selectedRound.tierId}`,
+      agent: parsedBawAddress,
+      probBps,
+      recoveryToken: encodeRecoveryToken(record),
+      previewCommand,
+    });
+    toast.success("Local salt saved & baw preview ready", {
+      description: "Back up the RKN1 token before executing in baw.",
+    });
+  };
+
+  const handleCopyAgentPrompt = async () => {
+    if (!selectedRound) return;
+    const appOrigin =
+      typeof window !== "undefined" ? window.location.origin : "https://reckon.markets";
+    const prompt = [
+      `Use Reckon (skill: \`npx skills add eugenennamdi/Reckon --skill reckon\` or MCP: ${appOrigin}/api/mcp) with my Binance Agentic Wallet (\`baw\`).`,
+      `1. Run preflight (\`baw wallet status\`, \`baw wallet address\`, \`baw wallet agent-id\`, \`baw wallet settings\`).`,
+      `2. Forecast ${probPct.toFixed(1)}% (${probBps} bps) on ${selectedRound.feedSymbol} Epoch #${selectedRound.epochId} (${selectedRound.tierLabel}, ${selectedRound.stakeBnb} BNB).`,
+      `3. Persist the commit salt locally before signing, run \`baw contract-call preview\`, show me the parsed calldata, value, allowanceChanges, and risks, and WAIT for my explicit confirmation before running \`baw contract-call execute\`.`,
+    ].join("\n");
+    await handleCopyText("agent-prompt", prompt, "AI Agent prompt (OpenClaw / Claude / Cursor)");
+  };
+
   const bawCommands = useMemo(() => {
     if (!selectedRound) return [];
-    const agentPlaceholder = address ?? "<YOUR_AGENT_WALLET>";
+    const agentPlaceholder = parsedBawAddress ?? address ?? "<YOUR_AGENT_WALLET>";
     const corePlaceholder = data.deployed ? data.coreAddress : "<RECKON_CORE_ADDRESS>";
+    const appOrigin =
+      typeof window !== "undefined" ? window.location.origin : "https://reckon.markets";
     const cmds = [
       {
-        label: "1. Preflight check (Agent ID + Developer Mode)",
+        label: "1. Install skill (1-line) or connect MCP",
+        command: `npx skills add eugenennamdi/Reckon --skill reckon\n# Hosted MCP (8 zero-clone tools): ${appOrigin}/api/mcp`,
+      },
+      {
+        label: "2. Preflight check (Agent ID + Developer Mode)",
         command: "node skills/reckon/scripts/reckon-cli.mjs preflight --json",
       },
       {
-        label: "2. Prepare commit & persist salt (mode 0600)",
+        label: "3. Prepare commit & persist salt (mode 0600)",
         command: `node skills/reckon/scripts/reckon-cli.mjs prepare-commit --feed ${selectedRound.feedId} --tier ${selectedRound.tierId} --prob-bps ${probBps} --epoch ${selectedRound.epochId} --agent ${agentPlaceholder} --core ${corePlaceholder} --json`,
       },
     ];
     if (selectedRound.roundId > 0) {
       cmds.push({
-        label: "3. Reveal forecast after resolveTime",
+        label: "4. Reveal forecast after resolveTime",
         command: `node skills/reckon/scripts/reckon-cli.mjs prepare-reveal --round-id ${selectedRound.roundId} --feed ${selectedRound.feedId} --epoch ${selectedRound.epochId} --tier ${selectedRound.tierId} --agent ${agentPlaceholder} --core ${corePlaceholder} --json`,
       });
     }
     return cmds;
-  }, [selectedRound, address, data.deployed, data.coreAddress, probBps]);
+  }, [selectedRound, parsedBawAddress, address, data.deployed, data.coreAddress, probBps]);
 
   return (
     <div className="space-y-10">
@@ -1212,8 +1356,173 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
               {/* Action CTA Section */}
               <div className="mt-5 space-y-3">
                 {selectedRound.state === "OPEN" && (
-                  <>
-                    {!isConnected ? (
+                  <div className="space-y-3">
+                    {/* Execution Mode Switcher: Binance Agentic Wallet (baw) vs Standard Browser Wallet */}
+                    <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/[0.045] p-1">
+                      <button
+                        type="button"
+                        onClick={() => setExecMode("baw")}
+                        className={`pressable inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-medium ${
+                          execMode === "baw"
+                            ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <TerminalWindow size={13} weight="duotone" />
+                        Agentic Wallet (baw)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExecMode("browser")}
+                        className={`pressable inline-flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-[11px] font-medium ${
+                          execMode === "browser"
+                            ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08)]"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <LockSimple size={13} weight="duotone" />
+                        Browser Wallet
+                      </button>
+                    </div>
+
+                    {execMode === "baw" ? (
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <label
+                              htmlFor="baw-agent-address"
+                              className="text-[11px] font-medium text-muted-foreground"
+                            >
+                              Agentic Wallet address (BNB Chain)
+                            </label>
+                            {parsedBawAddress &&
+                              (bawHasAgentId ? (
+                                <span className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-foreground">
+                                  <CheckCircle size={12} weight="fill" />
+                                  {bawAgentHandle}.ai
+                                </span>
+                              ) : (
+                                <span className="font-mono text-[10px] text-muted-foreground">
+                                  No Agent ID found
+                                </span>
+                              ))}
+                          </div>
+                          <Input
+                            id="baw-agent-address"
+                            value={agentWalletInput}
+                            onChange={(e) => handleAgentWalletChange(e.target.value)}
+                            placeholder="0x… (from `baw wallet address --json`)"
+                            className="bg-card font-mono text-[11px]"
+                          />
+                        </div>
+
+                        <Button
+                          type="button"
+                          size="lg"
+                          variant="default"
+                          disabled={!data.deployed || !parsedBawAddress || !bawHasAgentId}
+                          onClick={handleGenerateBawCommit}
+                          className="w-full"
+                        >
+                          <TerminalWindow size={15} weight="bold" />
+                          {!data.deployed
+                            ? `Mainnet deployment pending (${selectedRound.stakeBnb} BNB)`
+                            : !parsedBawAddress
+                              ? `Enter Agentic Wallet address · ${selectedRound.stakeBnb} BNB`
+                              : !bawHasAgentId
+                                ? "Address requires soulbound Agent ID"
+                                : `Generate baw commit · ${selectedRound.stakeBnb} BNB`}
+                        </Button>
+
+                        {generatedBawBundle &&
+                          generatedBawBundle.slotKey ===
+                            `${selectedRound.epochId}:${selectedRound.feedId}:${selectedRound.tierId}` && (
+                            <div className="surface-well space-y-2.5 rounded-xl p-3.5 text-[11px]">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium text-foreground">
+                                  1. Save reveal backup token (local salt)
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="xs"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[11px]"
+                                  onClick={() =>
+                                    handleCopyText(
+                                      "baw-token",
+                                      generatedBawBundle.recoveryToken,
+                                      "Reveal backup token (RKN1)",
+                                    )
+                                  }
+                                >
+                                  {copiedField === "baw-token" ? (
+                                    <Check size={12} weight="bold" />
+                                  ) : (
+                                    <Copy size={12} />
+                                  )}
+                                  {copiedField === "baw-token" ? "Copied" : "Copy token"}
+                                </Button>
+                              </div>
+                              <pre className="overflow-x-auto rounded-lg border border-black/[0.06] bg-card p-2 font-mono text-[10px] text-foreground/85">
+                                {generatedBawBundle.recoveryToken}
+                              </pre>
+
+                              <div className="flex items-center justify-between gap-2 pt-1">
+                                <span className="font-medium text-foreground">
+                                  2. Preview in baw (verify before execute)
+                                </span>
+                                <Button
+                                  type="button"
+                                  size="xs"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-[11px]"
+                                  onClick={() =>
+                                    handleCopyText(
+                                      "baw-cmd",
+                                      generatedBawBundle.previewCommand,
+                                      "baw contract-call preview command",
+                                    )
+                                  }
+                                >
+                                  {copiedField === "baw-cmd" ? (
+                                    <Check size={12} weight="bold" />
+                                  ) : (
+                                    <Copy size={12} />
+                                  )}
+                                  {copiedField === "baw-cmd" ? "Copied" : "Copy cmd"}
+                                </Button>
+                              </div>
+                              <pre className="overflow-x-auto rounded-lg border border-black/[0.06] bg-card p-2 font-mono text-[10px] leading-relaxed text-foreground/90">
+                                {generatedBawBundle.previewCommand}
+                              </pre>
+                              <p className="text-[10px] leading-relaxed text-muted-foreground">
+                                Confirm <code className="font-mono text-foreground">allowanceChanges: []</code>, then run{" "}
+                                <code className="font-mono text-foreground">
+                                  baw contract-call execute --requestId &lt;ID&gt; --json
+                                </code>
+                                .
+                              </p>
+                            </div>
+                          )}
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCopyAgentPrompt}
+                          className="w-full"
+                        >
+                          {copiedField === "agent-prompt" ? (
+                            <Check size={14} weight="bold" />
+                          ) : (
+                            <Robot size={14} weight="duotone" />
+                          )}
+                          {copiedField === "agent-prompt"
+                            ? "Prompt copied for your AI agent"
+                            : "Copy prompt for AI agent (OpenClaw / Claude / MCP)"}
+                        </Button>
+                      </div>
+                    ) : !isConnected ? (
                       <Button
                         type="button"
                         size="lg"
@@ -1230,10 +1539,20 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
                           weight="fill"
                           className="mt-0.5 shrink-0 text-foreground"
                         />
-                        <div className="space-y-0.5">
-                          <div className="font-medium text-foreground">Agent ID required</div>
+                        <div className="space-y-1">
+                          <div className="font-medium text-foreground">
+                            No Agent ID on this browser wallet
+                          </div>
                           <p className="text-[11px] leading-relaxed text-muted-foreground">
-                            Connect a wallet holding a soulbound SPACE ID Agent ID on BNB Chain to commit forecasts.
+                            Binance Agent IDs live on your isolated Agentic Wallet. Switch to{" "}
+                            <button
+                              type="button"
+                              onClick={() => setExecMode("baw")}
+                              className="font-medium text-foreground underline underline-offset-2"
+                            >
+                              Agentic Wallet (baw)
+                            </button>{" "}
+                            above to generate a zero-clone commit command.
                           </p>
                         </div>
                       </div>
@@ -1257,7 +1576,7 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
                           : `Mainnet deployment pending (${selectedRound.stakeBnb} BNB)`}
                       </Button>
                     )}
-                  </>
+                  </div>
                 )}
 
                 {selectedRound.state === "LOCKED" && (

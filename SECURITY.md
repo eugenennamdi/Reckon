@@ -1,6 +1,6 @@
 # Reckon Security & Hackathon Compliance Disclosure
 
-Reckon is engineered around **minimal trust surfaces, zero custody risk, and full verifiability** on BNB Smart Chain Mainnet (`chainId = 56`).
+Reckon is engineered around **minimal trust surfaces, zero custody risk, and full verifiability** on BNB Chain Mainnet (`chainId = 56`).
 
 ---
 
@@ -40,7 +40,7 @@ Both core smart contracts are **100% ownerless, non-upgradeable, and immutable**
 
 ## 3. Compliance Matrix — Binance Wallet × BNB Chain Agent ID Hackathon 9 Safety Red Lines
 
-1. **No web-based Agentic Wallet QR login / no server sessions:** Web UI connects strictly via standard EVM wallets (`wagmi`/`viem`); Agentic Wallet runs locally via the official `baw` CLI (`skills/reckon/SKILL.md`) and read+prepare `/api/mcp`.
+1. **No web-based Agentic Wallet QR login / no server sessions:** Web UI uses standard client-side EVM wallet connections (`RainbowKit`/`wagmi`) with zero server-side sessions, zero Agentic Wallet pairing codes, and zero `baw` QR login; Agentic Wallet runs locally via the official `baw` CLI (`skills/reckon/SKILL.md`) and read+prepare `/api/mcp`.
 2. **No bypassing transaction confirmations:** Every asset-moving or signing action in `skills/reckon/SKILL.md` previews (`baw contract-call preview` / `baw sign-message preview` / `baw x402-payment preview`), displays full addresses, amounts, simulation results, and risks, and waits for explicit human confirmation before `execute` / `sign`.
 3. **No unauthorized transfers or silent unlimited approvals:** Layer 1 uses native BNB (`allowanceChanges: []`, zero ERC-20 `approve()` calls). Layer 3 prioritizes zero-approval EIP-3009 stablecoins (`USD1`/`U`) and explicitly surfaces `needApproveFirst` for Permit2 (`USDT`/`USDC`).
 4. **Open-source & verified contracts with disclosed permissions:** MIT-licensed repo (`LICENSE`), BscScan + Sourcify verified, zero owner permissions (table above).

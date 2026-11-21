@@ -390,8 +390,8 @@ export function TerminalHeader() {
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
                 {hasAgentId
-                  ? `Soulbound identity ${handle}.ai active on BNB Smart Chain. Ready to commit forecasts and publish signals.`
-                  : "A soulbound SPACE ID Agent ID is required on BNB Smart Chain to commit forecasts and prevent Sybil bracketing."}
+                  ? `Soulbound identity ${handle}.ai active on BNB Chain. Ready to commit forecasts and publish signals.`
+                  : "A soulbound SPACE ID Agent ID is required on BNB Chain to commit forecasts and prevent Sybil bracketing."}
               </p>
             </div>
 

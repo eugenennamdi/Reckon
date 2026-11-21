@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
-import { encodeFunctionData, getAddress, isAddress, isHex, type Address, type Hex } from "viem";
-import { reckonCoreAbi } from "@/lib/abi";
+import { encodeFunctionData, getAddress, isAddress, isHex, parseUnits, type Address, type Hex } from "viem";
+import { reckonCoreAbi, reckonSignalRegistryAbi } from "@/lib/abi";
 import { getChainReader } from "@/lib/reckon/chain";
 import { computeCommitment, currentEpochId, epochTiming } from "@/lib/reckon/commitment";
 import {
   BSC_CHAIN_ID,
   ELITE_BRIER,
   FEEDS,
+  MAX_SIGNAL_PRICE_ATOMIC,
   MIN_COMPETITIVE_ROUNDS,
   MIN_REVEAL_RATE_BPS,
+  MIN_SIGNAL_PRICE_ATOMIC,
   MIN_VERIFIED_BRIER,
   STAKE_TIERS,
   findStablecoin,
@@ -64,7 +66,7 @@ const TOOLS: McpToolDefinition[] = [
   {
     name: "reckon_get_leaderboard",
     description:
-      "Read globally ranked Agent ID forecasters on BNB Smart Chain ordered by on-chain Brier score (0.7600 Verified / 0.7800 Elite thresholds) and registered x402 signal providers.",
+      "Read globally ranked Agent ID forecasters on BNB Chain ordered by on-chain Brier score (0.7600 Verified / 0.7800 Elite thresholds) and registered x402 signal providers.",
     inputSchema: {
       type: "object",
       properties: {
@@ -77,13 +79,16 @@ const TOOLS: McpToolDefinition[] = [
   {
     name: "reckon_get_signals",
     description:
-      "Read x402-gated forecast signal listings published by Verified Agent ID forecasters with live anti-fraud integrity tags (PENDING_REVEAL, MATCH, MISMATCH, NO_REVEAL). Pre-resolve signal payloads remain redacted until paid via x402.",
+      "Read x402-gated forecast signal listings published by Verified Agent ID forecasters with live anti-fraud integrity tags (PENDING, VERIFIED_MATCH, MISMATCH, UNREVEALED, ORACLE_CANCELLED). Pre-resolve signal payloads remain redacted until paid via x402.",
     inputSchema: {
       type: "object",
       properties: {
         feedId: { type: "integer", enum: [0, 1, 2], description: "0=BNB/USD, 1=BTC/USD, 2=ETH/USD" },
         roundId: { type: "integer", minimum: 1 },
-        integrity: { type: "string", enum: ["PENDING_REVEAL", "MATCH", "MISMATCH", "NO_REVEAL"] },
+        integrity: {
+          type: "string",
+          enum: ["PENDING", "VERIFIED_MATCH", "MISMATCH", "UNREVEALED", "ORACLE_CANCELLED"],
+        },
       },
       additionalProperties: false,
     },
@@ -100,7 +105,7 @@ const TOOLS: McpToolDefinition[] = [
         tierId: {
           type: "integer",
           enum: [0, 1, 2],
-          description: "0=0.002 BNB (Starter), 1=0.005 BNB (Standard), 2=0.01 BNB (Pro)",
+          description: "0=0.001 BNB (Starter), 1=0.005 BNB (Standard), 2=0.01 BNB (Pro)",
         },
         epochId: { type: "integer", minimum: 1, description: "Optional target 4h epoch ID (defaults to current OPEN epoch)." },
         commitment: {
@@ -134,6 +139,90 @@ const TOOLS: McpToolDefinition[] = [
       required: ["roundId"],
       properties: {
         roundId: { type: "integer", minimum: 1, description: "On-chain ReckonCore roundId." },
+        agent: {
+          type: "string",
+          description: "Optional 0x caller address for `--from` in `baw contract-call preview`.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "reckon_prepare_reveal",
+    description:
+      "Prepare an unsigned ReckonCore.reveal(roundId, probBps, salt) calldata bundle and exact `baw contract-call preview` CLI command for an active REVEAL window.",
+    inputSchema: {
+      type: "object",
+      required: ["roundId", "probBps", "salt"],
+      properties: {
+        roundId: { type: "integer", minimum: 1, description: "On-chain ReckonCore roundId." },
+        probBps: {
+          type: "integer",
+          minimum: 100,
+          maximum: 9900,
+          description: "Committed probability in basis points (100..9900).",
+        },
+        salt: {
+          type: "string",
+          description: "32-byte 0x-prefixed hex commit salt saved locally during commit.",
+        },
+        agent: {
+          type: "string",
+          description: "Optional 0x caller address for `--from` in `baw contract-call preview`.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "reckon_prepare_claim",
+    description:
+      "Prepare unsigned ReckonCore.claim(roundId) or ReckonCore.claimRefund(roundId) calldata + exact `baw contract-call preview` CLI command based on live round state.",
+    inputSchema: {
+      type: "object",
+      required: ["roundId"],
+      properties: {
+        roundId: { type: "integer", minimum: 1, description: "On-chain ReckonCore roundId." },
+        mode: {
+          type: "string",
+          enum: ["auto", "claim", "refund"],
+          default: "auto",
+          description: "auto detects CLAIMABLE vs NO_REVEALS/CANCELLED_ORACLE on-chain; override with claim or refund.",
+        },
+        agent: {
+          type: "string",
+          description: "Optional 0x caller address for `--from` in `baw contract-call preview`.",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "reckon_prepare_register_signal",
+    description:
+      "Prepare unsigned ReckonSignalRegistry.registerSignal(...) calldata + exact `baw contract-call preview` CLI command for a Verified Forecaster (`effectiveBrier >= 0.7600`, `>= 3` competitive epochs, `>= 80%` reveal rate).",
+    inputSchema: {
+      type: "object",
+      required: ["endpointUrl", "priceUsd", "bio"],
+      properties: {
+        endpointUrl: {
+          type: "string",
+          description: "Safe RFC 3986 https:// x402 signal endpoint URL (12..256 chars).",
+        },
+        priceUsd: {
+          type: "string",
+          description: "Signal price in USD between 0.10 and 50.00 (e.g. '0.50').",
+        },
+        token: {
+          type: "string",
+          enum: ["USD1", "U", "USDT", "USDC"],
+          default: "USD1",
+          description: "Preferred BNB Chain 18-decimal stablecoin (USD1/U use zero-approval EIP-3009).",
+        },
+        bio: {
+          type: "string",
+          description: "Printable methodology bio (<= 280 chars, zero control bytes).",
+        },
         agent: {
           type: "string",
           description: "Optional 0x caller address for `--from` in `baw contract-call preview`.",
@@ -463,6 +552,147 @@ async function executeTool(name: string, args: Record<string, unknown>) {
       bawPreviewCommand: calldata ? buildBawContractCallPreview(fromAddr, coreAddress, "0", calldata) : null,
       confirmationPolicy:
         "RED_LINE_2: Run `baw contract-call preview`, show parsed details to the user, and obtain explicit human confirmation before running `baw contract-call execute --requestId <ID> --json`.",
+    });
+  }
+
+  if (name === "reckon_prepare_reveal") {
+    const roundId = Number(args.roundId);
+    const probBps = Number(args.probBps);
+    if (!Number.isInteger(roundId) || roundId < 1) {
+      return toolResult({ error: "roundId must be a positive integer" }, true);
+    }
+    if (!Number.isInteger(probBps) || probBps < 100 || probBps > 9900) {
+      return toolResult({ error: "probBps must be an integer between 100 and 9900" }, true);
+    }
+    if (typeof args.salt !== "string" || !isHex(args.salt) || args.salt.length !== 66) {
+      return toolResult({ error: "salt must be a 32-byte 0x-prefixed hex string" }, true);
+    }
+    const fromAddr =
+      typeof args.agent === "string" && isAddress(args.agent) ? getAddress(args.agent) : "<WALLET_ADDRESS>";
+    const calldata = encodeFunctionData({
+      abi: reckonCoreAbi,
+      functionName: "reveal",
+      args: [BigInt(roundId), probBps, args.salt as Hex],
+    });
+    return toolResult({
+      action: "reveal",
+      chainId: BSC_CHAIN_ID,
+      to: coreAddress,
+      deployed: isDeployedAddress(coreAddress),
+      roundId,
+      probBps,
+      valueWei: "0",
+      calldata,
+      bawPreviewCommand: buildBawContractCallPreview(fromAddr, coreAddress, "0", calldata),
+      confirmationPolicy:
+        "RED_LINE_2: Run `baw contract-call preview`, confirm roundId, probBps, and allowanceChanges: [], and obtain explicit human confirmation before `baw contract-call execute`.",
+    });
+  }
+
+  if (name === "reckon_prepare_claim") {
+    const roundId = Number(args.roundId);
+    if (!Number.isInteger(roundId) || roundId < 1) {
+      return toolResult({ error: "roundId must be a positive integer" }, true);
+    }
+    const mode = typeof args.mode === "string" ? args.mode : "auto";
+    if (mode !== "auto" && mode !== "claim" && mode !== "refund") {
+      return toolResult({ error: "mode must be 'auto', 'claim', or 'refund'" }, true);
+    }
+    const fromAddr =
+      typeof args.agent === "string" && isAddress(args.agent) ? getAddress(args.agent) : "<WALLET_ADDRESS>";
+
+    let fnName: "claim" | "claimRefund" = mode === "refund" ? "claimRefund" : "claim";
+    let detectedState: string | null = null;
+    if (mode === "auto" && isDeployedAddress(coreAddress)) {
+      const { round } = await chain.getRoundAndEntry(roundId);
+      if (!round) {
+        return toolResult({ error: `Round ${roundId} not found` }, true);
+      }
+      detectedState = round.state;
+      if (round.state === "CLAIMABLE") {
+        fnName = "claim";
+      } else if (round.state === "NO_REVEALS" || round.state === "CANCELLED_ORACLE") {
+        fnName = "claimRefund";
+      } else {
+        return toolResult(
+          { error: `Round ${roundId} is currently ${round.state} and not yet claimable or refundable.` },
+          true,
+        );
+      }
+    }
+
+    const calldata = encodeFunctionData({
+      abi: reckonCoreAbi,
+      functionName: fnName,
+      args: [BigInt(roundId)],
+    });
+    return toolResult({
+      action: fnName,
+      chainId: BSC_CHAIN_ID,
+      to: coreAddress,
+      deployed: isDeployedAddress(coreAddress),
+      roundId,
+      roundState: detectedState,
+      valueWei: "0",
+      calldata,
+      bawPreviewCommand: buildBawContractCallPreview(fromAddr, coreAddress, "0", calldata),
+      confirmationPolicy:
+        "RED_LINE_2: Run `baw contract-call preview`, verify parsed function and allowanceChanges: [], and obtain explicit human confirmation before `baw contract-call execute`.",
+    });
+  }
+
+  if (name === "reckon_prepare_register_signal") {
+    const endpointUrl = typeof args.endpointUrl === "string" ? args.endpointUrl.trim() : "";
+    const priceUsd = typeof args.priceUsd === "string" ? args.priceUsd.trim() : "";
+    const tokenInput = typeof args.token === "string" ? args.token.trim() : "USD1";
+    const bio = typeof args.bio === "string" ? args.bio.trim() : "";
+
+    if (
+      endpointUrl.length < 12 ||
+      endpointUrl.length > 256 ||
+      !/^https:\/\/[A-Za-z0-9][A-Za-z0-9._~:/?#=&%+\-]*$/.test(endpointUrl)
+    ) {
+      return toolResult({ error: "endpointUrl must be a safe RFC 3986 https:// URL (12..256 chars)" }, true);
+    }
+    if (bio.length > 280 || /[\x00-\x1f\x7f]/.test(bio)) {
+      return toolResult({ error: "bio must be <= 280 printable ASCII characters with zero control bytes" }, true);
+    }
+    const coin = findStablecoin(tokenInput);
+    if (!coin) {
+      return toolResult({ error: "token must be one of USD1, U, USDT, USDC" }, true);
+    }
+    let priceAtomic: bigint;
+    try {
+      priceAtomic = parseUnits(priceUsd, 18);
+    } catch {
+      return toolResult({ error: "priceUsd must be a valid decimal USD amount (e.g. '0.50')" }, true);
+    }
+    if (priceAtomic < MIN_SIGNAL_PRICE_ATOMIC || priceAtomic > MAX_SIGNAL_PRICE_ATOMIC) {
+      return toolResult({ error: "priceUsd must be between 0.10 and 50.00" }, true);
+    }
+    const fromAddr =
+      typeof args.agent === "string" && isAddress(args.agent) ? getAddress(args.agent) : "<WALLET_ADDRESS>";
+    const calldata = encodeFunctionData({
+      abi: reckonSignalRegistryAbi,
+      functionName: "registerSignal",
+      args: [endpointUrl, priceAtomic, coin.address, bio],
+    });
+    return toolResult({
+      action: "registerSignal",
+      chainId: BSC_CHAIN_ID,
+      to: registryAddress,
+      deployed: isDeployedAddress(registryAddress),
+      endpointUrl,
+      priceUsd,
+      priceAtomic: priceAtomic.toString(),
+      paymentToken: coin.address,
+      paymentTokenSymbol: coin.symbol,
+      bio,
+      valueWei: "0",
+      calldata,
+      bawPreviewCommand: buildBawContractCallPreview(fromAddr, registryAddress, "0", calldata),
+      confirmationPolicy:
+        "RED_LINE_2: Run `baw contract-call preview`, verify endpointUrl, price, token, and allowanceChanges: [], and obtain explicit human confirmation before `baw contract-call execute`.",
     });
   }
 

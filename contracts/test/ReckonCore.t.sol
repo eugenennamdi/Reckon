@@ -109,11 +109,11 @@ contract ReckonCoreTest is Test {
 
         bytes32 commA = core.computeCommitment(0, epochId, 0, alice, aliceProb, saltA);
         vm.prank(alice);
-        roundId = core.commitEpoch{value: 0.002 ether}(0, epochId, 0, commA);
+        roundId = core.commitEpoch{value: 0.001 ether}(0, epochId, 0, commA);
 
         bytes32 commB = core.computeCommitment(0, epochId, 0, bob, bobProb, saltB);
         vm.prank(bob);
-        core.commit{value: 0.002 ether}(roundId, commB);
+        core.commit{value: 0.001 ether}(roundId, commB);
 
         _settleCompetitiveBnb(roundId, epochId, settlePrice);
 
@@ -191,7 +191,7 @@ contract ReckonCoreTest is Test {
 
         vm.prank(noIdUser);
         vm.expectRevert(ReckonCore.NoAgentID.selector);
-        core.commit{value: 0.002 ether}(rId, comm);
+        core.commit{value: 0.001 ether}(rId, comm);
     }
 
     function test_DoubleCommitAndInvalidStakeRevert() public {
@@ -201,7 +201,7 @@ contract ReckonCoreTest is Test {
 
         vm.prank(alice);
         vm.expectRevert(ReckonCore.InvalidStakeAmount.selector);
-        core.commit{value: 0.002 ether}(rId, comm);
+        core.commit{value: 0.001 ether}(rId, comm);
 
         vm.prank(alice);
         core.commit{value: 0.005 ether}(rId, comm);
@@ -295,7 +295,7 @@ contract ReckonCoreTest is Test {
         bytes32 comm = core.computeCommitment(0, epoch, 0, alice, 8000, salt);
 
         vm.prank(alice);
-        core.commit{value: 0.002 ether}(rId, comm);
+        core.commit{value: 0.001 ether}(rId, comm);
 
         ReckonCore.Round memory r = core.getRound(rId);
 
@@ -403,7 +403,7 @@ contract ReckonCoreTest is Test {
         uint64 rId = core.createRound(0, epoch, 0);
         bytes32 cAlice = core.computeCommitment(0, epoch, 0, alice, 8000, bytes32(uint256(1)));
         vm.prank(alice);
-        core.commit{value: 0.002 ether}(rId, cAlice);
+        core.commit{value: 0.001 ether}(rId, cAlice);
 
         ReckonCore.Round memory r = core.getRound(rId);
         (uint80 s1, uint80 s2) = _setHistoricalBracket(bnbFeed, 1, 10, r.commitEnd, 590e8, 591e8);
@@ -423,7 +423,7 @@ contract ReckonCoreTest is Test {
         uint256 balBefore = alice.balance;
         vm.prank(alice);
         core.claimRefund(rId);
-        assertEq(alice.balance - balBefore, 0.002 ether);
+        assertEq(alice.balance - balBefore, 0.001 ether);
         assertEq(core.getRound(rId).remainingPool, 0);
 
         // S = 0 penalty permanently recorded
@@ -438,7 +438,7 @@ contract ReckonCoreTest is Test {
         uint64 rId = core.createRound(0, epoch, 0);
         bytes32 cAlice = core.computeCommitment(0, epoch, 0, alice, 8000, bytes32(uint256(1)));
         vm.prank(alice);
-        core.commit{value: 0.002 ether}(rId, cAlice);
+        core.commit{value: 0.001 ether}(rId, cAlice);
 
         ReckonCore.Round memory r = core.getRound(rId);
         // Feed halted BEFORE resolveTime (no round posted after resolveTime)
@@ -457,7 +457,7 @@ contract ReckonCoreTest is Test {
         uint256 balBefore = alice.balance;
         vm.prank(alice);
         core.claimRefund(rId);
-        assertEq(alice.balance - balBefore, 0.002 ether);
+        assertEq(alice.balance - balBefore, 0.001 ether);
 
         // Zero calibration impact
         IReckonCore.EffectiveProfile memory p = core.getEffectiveProfile(alice);
@@ -491,7 +491,7 @@ contract ReckonCoreTest is Test {
             bytes32 salt = bytes32(uint256(i + 1));
             bytes32 cSolo = core.computeCommitment(0, epoch, 0, alice, 9900, salt);
             vm.prank(alice);
-            uint64 rId = core.commitEpoch{value: 0.002 ether}(0, epoch, 0, cSolo);
+            uint64 rId = core.commitEpoch{value: 0.001 ether}(0, epoch, 0, cSolo);
             ReckonCore.Round memory r = core.getRound(rId);
             (uint80 s1, uint80 s2) = _setHistoricalBracket(bnbFeed, 1, epoch * 10 + 1, r.commitEnd, 600e8, 601e8);
             (uint80 e1, uint80 e2) = _setHistoricalBracket(bnbFeed, 1, epoch * 10 + 5, r.resolveTime, 610e8, 611e8);
@@ -503,7 +503,7 @@ contract ReckonCoreTest is Test {
             uint256 before = alice.balance;
             vm.prank(alice);
             core.claim(rId);
-            assertEq(alice.balance - before, 0.002 ether);
+            assertEq(alice.balance - before, 0.001 ether);
         }
 
         IReckonCore.EffectiveProfile memory p = core.getEffectiveProfile(alice);
@@ -527,10 +527,10 @@ contract ReckonCoreTest is Test {
         vm.warp(uint256(e4) * core.EPOCH_DURATION() + 10);
         bytes32 cA4 = core.computeCommitment(0, e4, 0, alice, 8000, bytes32(uint256(77)));
         vm.prank(alice);
-        uint64 r4 = core.commitEpoch{value: 0.002 ether}(0, e4, 0, cA4);
+        uint64 r4 = core.commitEpoch{value: 0.001 ether}(0, e4, 0, cA4);
         bytes32 cB4 = core.computeCommitment(0, e4, 0, bob, 5000, bytes32(uint256(88)));
         vm.prank(bob);
-        core.commit{value: 0.002 ether}(r4, cB4);
+        core.commit{value: 0.001 ether}(r4, cB4);
 
         ReckonCore.Round memory r = core.getRound(r4);
         (uint80 s1, uint80 s2) = _setHistoricalBracket(bnbFeed, 1, e4 * 10 + 1, r.commitEnd, 600e8, 601e8);
@@ -743,7 +743,7 @@ contract ReckonCoreTest is Test {
             uint256 aBefore = alice.balance;
             vm.prank(alice);
             core.claimRefund(r2);
-            assertEq(alice.balance - aBefore, 0.002 ether);
+            assertEq(alice.balance - aBefore, 0.001 ether);
         }
 
         // --- Part 3: Live feed revert cancels cleanly at +2h via `cancelUnsettleableRound` ---
@@ -1022,7 +1022,7 @@ contract ReckonCoreTest is Test {
     ///         and refunds, dropping to 0 post-claim) while `previewPayout` preserves historical WSWM winnings.
     function test_Regression_L3_PreviewPayoutVsClaimablePayoutExactSemantics() public {
         uint64 epoch = BASE_EPOCH;
-        uint64 rId = core.createRound(0, epoch, 0); // 0.002 ether
+        uint64 rId = core.createRound(0, epoch, 0); // 0.001 ether
 
         bytes32 sA = bytes32(uint256(1));
         bytes32 sB = bytes32(uint256(2));

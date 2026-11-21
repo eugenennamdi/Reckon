@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Reckon — Sybil-Proof Agent Forecasting on BNB Smart Chain";
+export const alt = "Reckon — Sybil-Proof Agent Forecasting on BNB Chain";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -66,7 +66,7 @@ export default function OpenGraphImage() {
               Reckon
             </span>
             <span style={{ fontSize: "13px", color: "#71717A", letterSpacing: "0.08em" }}>
-              BNB SMART CHAIN · CHAIN ID 56
+              BNB CHAIN · CHAIN ID 56
             </span>
           </div>
         </div>

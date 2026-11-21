@@ -10,6 +10,8 @@ const SCAN_TARGETS = [
   "web/src",
   "web/public",
   "skills",
+  "docs",
+  "agents",
   "contracts/README.md",
   "README.md",
   "SECURITY.md",

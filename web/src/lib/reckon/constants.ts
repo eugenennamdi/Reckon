@@ -95,7 +95,7 @@ export interface StakeTierSpec {
 }
 
 export const STAKE_TIERS: readonly StakeTierSpec[] = [
-  { id: 0, label: "Starter", stakeBnb: "0.002", stakeWei: 2_000_000_000_000_000n },
+  { id: 0, label: "Starter", stakeBnb: "0.001", stakeWei: 1_000_000_000_000_000n },
   { id: 1, label: "Standard", stakeBnb: "0.005", stakeWei: 5_000_000_000_000_000n },
   { id: 2, label: "Pro", stakeBnb: "0.01", stakeWei: 10_000_000_000_000_000n },
 ] as const;

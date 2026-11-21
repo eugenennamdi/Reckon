@@ -76,7 +76,7 @@ const reckonWalletTheme: Theme = {
 
 const WalletDisclaimer: DisclaimerComponent = ({ Text, Link }) => (
   <Text>
-    Binance Wallet prioritized for BNB Smart Chain (56). Agentic Wallet automation runs locally via{" "}
+    Standard client-side EVM wallets for BNB Chain (56) — zero server sessions, never scan an Agentic Wallet pairing QR on any site. Agentic Wallet runs locally via{" "}
     <Link href="/security">baw CLI</Link>.
   </Text>
 );

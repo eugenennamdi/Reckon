@@ -173,7 +173,7 @@ export function SignalDesk({
   const [signals, setSignals] = useState<CatalogSignalItem[]>(initialSignals);
   const [providers, setProviders] = useState<SignalProviderSnapshot[]>(initialProviders);
   const [facilitatorMode, setFacilitatorMode] = useState(initialFacilitatorMode);
-  const [origin, setOrigin] = useState("https://reckon.local");
+  const [origin, setOrigin] = useState("https://reckon.markets");
   const [copiedCli, setCopiedCli] = useState(false);
 
   // Unlock inspector state
@@ -1216,7 +1216,7 @@ export function SignalDesk({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0" className="font-mono text-xs">
-                          0.002 BNB
+                          0.001 BNB
                         </SelectItem>
                         <SelectItem value="1" className="font-mono text-xs">
                           0.005 BNB

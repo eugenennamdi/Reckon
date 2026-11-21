@@ -72,19 +72,19 @@ contract ReckonForkTest is Test {
             bytes32 commNoId = core.computeCommitment(0, epoch, 0, nonHolder, 5000, bytes32(uint256(3)));
             vm.prank(nonHolder);
             vm.expectRevert(ReckonCore.NoAgentID.selector);
-            core.commitEpoch{value: 0.002 ether}(0, epoch, 0, commNoId);
+            core.commitEpoch{value: 0.001 ether}(0, epoch, 0, commNoId);
         }
 
         uint64 rId;
         {
             bytes32 cAlice = core.computeCommitment(0, epoch, 0, alice, 8500, bytes32(uint256(1)));
             vm.prank(alice);
-            rId = core.commitEpoch{value: 0.002 ether}(0, epoch, 0, cAlice);
+            rId = core.commitEpoch{value: 0.001 ether}(0, epoch, 0, cAlice);
             assertEq(rId, 1);
 
             bytes32 cSatoshi = core.computeCommitment(0, epoch, 0, satoshi, 2500, bytes32(uint256(2)));
             vm.prank(satoshi);
-            core.commit{value: 0.002 ether}(rId, cSatoshi);
+            core.commit{value: 0.001 ether}(rId, cSatoshi);
         }
 
         assertEq(core.agentCount(), 2);
@@ -116,7 +116,7 @@ contract ReckonForkTest is Test {
         vm.prank(satoshi);
         core.claim(rId);
 
-        assertEq((alice.balance - aBefore) + (satoshi.balance - sBefore), 0.004 ether);
+        assertEq((alice.balance - aBefore) + (satoshi.balance - sBefore), 0.002 ether);
         assertEq(core.getRound(rId).remainingPool, 0);
         assertEq(address(core).balance, 0);
         assertEq(core.getEffectiveProfile(alice).competitiveRoundsScored, 1);

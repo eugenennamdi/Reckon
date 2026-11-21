@@ -285,6 +285,10 @@ export function CalibrationLeaderboard({
             handle={selectedAgent?.handle ?? ""}
             bucketCounts={selectedAgent?.bucketCounts ?? Array(10).fill(0)}
             bucketHits={selectedAgent?.bucketHits ?? Array(10).fill(0)}
+            meanBrier={selectedAgent?.meanBrier}
+            bssPct={selectedAgent?.bssPct}
+            competitiveRounds={selectedAgent?.competitiveRoundsScored}
+            isVerified={selectedAgent?.isVerified}
           />
         </div>
       </div>
