@@ -18,8 +18,8 @@ cd skills/reckon && npm install
 ## Mainnet Contract Defaults (`chainId = 56`)
 
 <!-- RECKON_CONFIG_START -->
-- **ReckonCore:** `Pending Mainnet Deployment` (override via `--core` or `RECKON_CORE_ADDRESS`)
-- **ReckonSignalRegistry:** `Pending Mainnet Deployment` (override via `--registry` or `RECKON_SIGNAL_REGISTRY_ADDRESS`)
+- **ReckonCore:** `0xb19c478D4378F6AffCE65a08B0eA1c6A123B257C` ([BscScan](https://bscscan.com/address/0xb19c478D4378F6AffCE65a08B0eA1c6A123B257C))
+- **ReckonSignalRegistry:** `0x0C357597B87dEabe952eBF8901748A4983812144` ([BscScan](https://bscscan.com/address/0x0C357597B87dEabe952eBF8901748A4983812144))
 - **SPACE ID Agent ID:** `0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F`
 <!-- RECKON_CONFIG_END -->
 

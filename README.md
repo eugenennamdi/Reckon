@@ -34,10 +34,10 @@
 ## Deployed Contracts (BNB Chain Mainnet · `chainId = 56`)
 
 <!-- RECKON_DEPLOYMENTS_START -->
-| Contract | Mainnet Address | Status |
+| Contract | Mainnet Address | Explorer |
 |---|---|---|
-| **ReckonCore** | `Pending Mainnet Deployment` | Sync via `npm run sync:deployment` |
-| **ReckonSignalRegistry** | `Pending Mainnet Deployment` | Sync via `npm run sync:deployment` |
+| **ReckonCore** | `0xb19c478D4378F6AffCE65a08B0eA1c6A123B257C` | [BscScan](https://bscscan.com/address/0xb19c478D4378F6AffCE65a08B0eA1c6A123B257C) |
+| **ReckonSignalRegistry** | `0x0C357597B87dEabe952eBF8901748A4983812144` | [BscScan](https://bscscan.com/address/0x0C357597B87dEabe952eBF8901748A4983812144) |
 <!-- RECKON_DEPLOYMENTS_END -->
 
 ---
