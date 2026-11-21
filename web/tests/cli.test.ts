@@ -310,7 +310,8 @@ if (args.startsWith("wallet settings")) {
   console.log(JSON.stringify({
     success: true,
     data: {
-      devMode: { enabled: true, expiresAt: ${mode === "expired" ? pastMs : futureMs}, balanceExceeded: false, dailyLimit: "100" },
+      devMode: { enabled: true, expiresAt: ${JSON.stringify(mode === "expired" ? new Date(pastMs).toISOString() : new Date(futureMs).toISOString())}, balanceExceeded: false, dailyLimit: 1000 },
+      sessionExpireTime: ${JSON.stringify(new Date(futureMs).toISOString())},
       x402QuotaLeft: 20
     }
   }));
@@ -330,7 +331,7 @@ process.exit(1);
     assert.equal(healthy.ok, true);
     assert.equal(healthy.wallet.handle, "alice");
     assert.equal(healthy.wallet.address, AGENT);
-    assert.equal(healthy.wallet.devModeDailyLimit, "100");
+    assert.equal(healthy.wallet.devModeDailyLimit, 1000);
 
     writeMockBaw("transient");
     const transient = JSON.parse(

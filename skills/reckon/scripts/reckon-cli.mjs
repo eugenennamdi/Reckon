@@ -336,9 +336,16 @@ async function handlePreflight() {
   }
   const settingsData = unwrapBawData(settingsRes.payload);
   const devMode = settingsData.devMode || {};
-  const expiresAt = Number(devMode.expiresAt || 0);
+  const rawExpires = devMode.expiresAt;
+  let expiresMs = 0;
+  if (typeof rawExpires === "number" || (typeof rawExpires === "string" && /^\d+$/.test(rawExpires.trim()))) {
+    const num = Number(rawExpires);
+    expiresMs = num > 0 && num < 10_000_000_000 ? num * 1000 : num;
+  } else if (typeof rawExpires === "string" && rawExpires.trim()) {
+    const parsed = Date.parse(rawExpires);
+    if (Number.isFinite(parsed)) expiresMs = parsed;
+  }
   const nowMs = Date.now();
-  const expiresMs = expiresAt > 0 && expiresAt < 10_000_000_000 ? expiresAt * 1000 : expiresAt;
   const devModeActive = Boolean(devMode.enabled) && expiresMs > nowMs;
 
   if (!devModeActive) {
@@ -359,7 +366,7 @@ async function handlePreflight() {
       address: bscAddress,
       handle: agentData.handle,
       agentId: agentData.agentId || null,
-      sessionExpireTime: statusData.sessionExpireTime ?? null,
+      sessionExpireTime: settingsData.sessionExpireTime ?? statusData.sessionExpireTime ?? null,
       devModeEnabled: true,
       devModeExpiresAt: expiresMs,
       devModeDailyLimit: devMode.dailyLimit ?? null,
