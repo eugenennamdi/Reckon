@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js & TypeScript
+web/.next/
+web/out/
+web/next-env.ts
+web/next-env.d.ts
+*.tsbuildinfo
+
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/lcov.info
+
+# Environment & Secrets (NEVER commit secrets or salts)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+salts*.json
+.reckon-data/
+web/.reckon-data/
+
+# OS / IDE
+.DS_Store
+*.log

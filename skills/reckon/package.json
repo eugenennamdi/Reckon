@@ -1,0 +1,10 @@
+{
+  "name": "@reckon-protocol/skill",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone Binance Agentic Wallet (baw) CLI and skill bundle for Reckon on BNB Smart Chain.",
+  "dependencies": {
+    "viem": "^2.23.0"
+  }
+}

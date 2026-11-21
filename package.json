@@ -1,0 +1,18 @@
+{
+  "name": "reckon-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reckon — Sybil-proof, commit-reveal forecasting & B402 verified signal protocol on BNB Chain",
+  "scripts": {
+    "contracts:build": "cd contracts && forge build --sizes",
+    "contracts:test": "cd contracts && forge test --no-match-path 'test/ReckonFork.t.sol' -vv",
+    "contracts:fuzz": "cd contracts && forge test --match-path 'test/*fuzz*' -vv",
+    "contracts:fork": "cd contracts && forge test --match-path 'test/ReckonFork.t.sol' --fork-url https://bsc-dataseed.binance.org/ -vv",
+    "web:dev": "cd web && npm run dev",
+    "web:build": "cd web && npm run build",
+    "web:typecheck": "cd web && npm run typecheck",
+    "web:test": "cd web && npm test",
+    "check:compliance": "node scripts/check-compliance.mjs",
+    "sync:deployment": "node scripts/sync-deployment.mjs"
+  }
+}
