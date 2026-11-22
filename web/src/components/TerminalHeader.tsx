@@ -33,12 +33,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { BscChainIcon } from "./AssetIcon";
+import { OnboardingModalTrigger } from "./OnboardingModal";
 import { ReckonMark } from "./ReckonMark";
 
 const NAV_ITEMS = [
   { href: "/", label: "Markets" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/signals", label: "Signals" },
+  { href: "/docs", label: "Docs" },
   { href: "/security", label: "Security" },
 ] as const;
 
@@ -207,6 +209,7 @@ export function TerminalHeader() {
 
           {/* Right: Compact Non-Wrapping Network & Account Controls */}
           <div className="flex min-w-0 items-center justify-end gap-2">
+            <OnboardingModalTrigger />
             {!mounted ? (
               <div className="h-8 w-28 animate-pulse rounded-lg bg-black/[0.06]" />
             ) : isConnected && address ? (

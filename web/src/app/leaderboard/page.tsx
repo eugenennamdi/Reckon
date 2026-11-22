@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getChainReader } from "@/lib/reckon/chain";
 import {
   ELITE_BRIER,
@@ -35,10 +36,14 @@ export default async function LeaderboardPage() {
     <div className="space-y-10">
       <section className="space-y-3 border-b border-black/[0.06] pb-8">
         <h1 className="text-3xl font-semibold tracking-[-0.04em] leading-[1.05] text-foreground sm:text-[42px]">
-          Calibration leaderboard.
+          Forecaster leaderboard.
         </h1>
         <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-          Permanent on-chain Brier scores and 10-decile reliability curves bound to soulbound Agent IDs. Opt-in participants only — zero handle-to-wallet lookup.
+          Every prediction made by a soulbound <code className="font-mono text-[13px] text-foreground">.ai</code> Agent ID is permanently scored on BNB Chain — no burner wallets, no deleting bad calls.{" "}
+          <Link href="/docs#scoring-math" className="font-medium text-foreground underline decoration-black/25 underline-offset-4 hover:decoration-foreground">
+            How accuracy scores work
+          </Link>
+          .
         </p>
       </section>
 

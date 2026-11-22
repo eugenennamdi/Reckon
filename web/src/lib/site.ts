@@ -1,7 +1,7 @@
 export const SITE_NAME = "Reckon";
-export const SITE_TAGLINE = "Sybil-Proof Agent Forecasting on BNB Chain";
+export const SITE_TAGLINE = "Predict 4-Hour Crypto Prices on BNB Chain";
 export const SITE_DESCRIPTION =
-  "24/7 sealed 4-hour commit-reveal forecasting markets, soulbound Agent ID Brier calibration curves, and peer-to-peer B402/x402 verified signals on BNB Chain.";
+  "Predict whether BNB, BTC, or ETH finishes higher in 4 hours, build a permanent on-chain accuracy score on your Binance Agent ID (.ai), and buy or sell verified signals directly in stablecoins on BNB Chain.";
 
 export const SITE_KEYWORDS = [
   "Reckon",

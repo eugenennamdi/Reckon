@@ -766,11 +766,12 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
       <section className="grid gap-8 border-b border-black/[0.06] pb-9 lg:grid-cols-12 lg:items-center">
         <div className="space-y-3.5 lg:col-span-7">
           <h1 className="text-3xl font-semibold tracking-[-0.04em] leading-[1.05] text-foreground sm:text-[42px]">
-            Calibrated forecasting markets.
+            Predict 4-hour prices. Prove your skill.
           </h1>
 
           <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-            Seal probabilistic beliefs on live Chainlink feeds, earn permanent on-chain Brier scores bound to soulbound Agent ID, and monetize verified signals via x402.
+            Stake <code className="font-mono text-[13px] text-foreground">0.001 BNB</code> on whether BNB, BTC, or ETH finishes higher in 4 hours. Your call stays hidden until prices settle, builds a permanent accuracy score on your{" "}
+            <code className="font-mono text-[13px] text-foreground">.ai</code> Agent ID, and unlocks paid signal publishing.
           </p>
         </div>
 
@@ -876,7 +877,7 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Epoch Ledger
+                Past Rounds
               </button>
             </div>
 
@@ -954,7 +955,7 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
             className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
           >
             <UploadSimple size={13} />
-            Restore salt backup
+            Restore prediction key
           </Button>
         </div>
 
@@ -1219,24 +1220,26 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
                   <div className="surface-well rounded-xl p-5">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                        <span>P(Resolve ≥ Strike)</span>
+                        <span>
+                          Chance {selectedRound.feedSymbol.split("/")[0]} finishes higher
+                        </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
                               type="button"
-                              aria-label="About Lambert WSWM scoring"
+                              aria-label="How accuracy scoring works"
                               className="text-muted-foreground transition-colors hover:text-foreground"
                             >
                               <Info size={13} />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            Strictly proper Lambert WSWM (EC 2008): reporting your true subjective probability uniquely maximizes expected payout.
+                            Set your honest probability (1%–99%). Reporting your true estimate maximizes expected payout under our accuracy-weighted scoring formula — see /docs for the math.
                           </TooltipContent>
                         </Tooltip>
                       </div>
                       <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-                        YES {probPct.toFixed(1)}% · NO {(100 - probPct).toFixed(1)}%
+                        UP {probPct.toFixed(1)}% · DOWN {(100 - probPct).toFixed(1)}%
                       </span>
                     </div>
 
@@ -1288,11 +1291,11 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
                     </div>
                   </div>
 
-                  {/* Visual Quadratic Brier Payoff Comparison (Hairline-separated columns) */}
+                  {/* Visual Accuracy Score Comparison (Hairline-separated columns) */}
                   <div className="grid grid-cols-2 divide-x divide-black/[0.07]">
                     <div className="space-y-1.5 pr-4">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[11px] text-muted-foreground">Brier if YES</span>
+                        <span className="text-[11px] text-muted-foreground">Score if UP</span>
                         <span className="font-mono text-xs font-semibold tabular-nums text-foreground">
                           {brierIfYes.toFixed(4)}
                         </span>
@@ -1307,7 +1310,7 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
 
                     <div className="space-y-1.5 pl-4">
                       <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[11px] text-muted-foreground">Brier if NO</span>
+                        <span className="text-[11px] text-muted-foreground">Score if DOWN</span>
                         <span className="font-mono text-xs font-medium tabular-nums text-muted-foreground">
                           {brierIfNo.toFixed(4)}
                         </span>
@@ -1326,27 +1329,30 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
               {/* Clean Hairline Protocol Spec List (no nested box) */}
               <div className="mt-5 space-y-2.5 border-t border-black/[0.06] pt-4 text-xs">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">Resolution rule</span>
+                  <span className="text-muted-foreground">Win condition</span>
                   <span className="font-mono text-[11px] text-foreground">
-                    Price(resolve) ≥ Strike
+                    4h close ≥ Start price
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">Forward ATM strike</span>
+                  <span className="text-muted-foreground">Start price</span>
                   <span className="font-mono text-[11px] tabular-nums text-foreground">
                     {selectedRound.strikeFixed
                       ? `$${formatUsdPrice8(selectedRound.strikePrice8)}`
-                      : "Fixed at commit close"}
+                      : "Locked when round closes"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground">Scoring · Fee</span>
-                  <span className="font-mono text-[11px] text-foreground">
-                    Lambert WSWM · 0.00%
-                  </span>
+                  <Link
+                    href="/docs#scoring-math"
+                    className="font-mono text-[11px] text-foreground underline decoration-black/20 underline-offset-2 hover:decoration-foreground"
+                  >
+                    Accuracy-weighted · 0% fee
+                  </Link>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground">Pool commits / reveals</span>
+                  <span className="text-muted-foreground">Predictions / revealed</span>
                   <span className="font-mono text-[11px] tabular-nums text-foreground">
                     {selectedRound.committedCount} / {selectedRound.revealedCount}
                   </span>
@@ -1698,13 +1704,20 @@ export function RoundsTerminal({ initialData }: { initialData: RoundsApiResponse
                 )}
 
                 <p className="border-t border-black/[0.06] pt-3.5 text-left text-[11px] leading-relaxed text-muted-foreground">
-                  Stakes are at risk of loss; missing the 4h reveal forfeits 100% and records{" "}
-                  <code className="font-mono text-foreground/80">0.0000</code> Brier. Smart contract &amp; oracle risks apply — DYOR.{" "}
+                  Stakes are at risk of loss; missing the 4h reveal window forfeits your stake and records a{" "}
+                  <code className="font-mono text-foreground/80">0</code> accuracy score. Smart contract &amp; oracle risks apply — DYOR.{" "}
                   <Link
                     href="/security"
                     className="font-medium text-foreground/80 underline decoration-black/20 underline-offset-2 hover:text-foreground"
                   >
-                    Risk model
+                    Security
+                  </Link>
+                  {" · "}
+                  <Link
+                    href="/docs"
+                    className="font-medium text-foreground/80 underline decoration-black/20 underline-offset-2 hover:text-foreground"
+                  >
+                    Docs
                   </Link>
                 </p>
               </div>

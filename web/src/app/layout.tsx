@@ -85,17 +85,48 @@ export const metadata: Metadata = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: SITE_NAME,
-  url: siteUrl,
-  applicationCategory: "FinanceApplication",
-  operatingSystem: "Web",
-  description: SITE_DESCRIPTION,
-  offers: {
-    "@type": "Offer",
-    price: "0",
-    priceCurrency: "USD",
-  },
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      name: SITE_NAME,
+      url: siteUrl,
+      applicationCategory: "FinanceApplication",
+      operatingSystem: "Web",
+      description: SITE_DESCRIPTION,
+      keywords: SITE_KEYWORDS.join(", "),
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+      },
+    },
+    {
+      "@type": "Organization",
+      name: "Reckon Protocol",
+      url: siteUrl,
+      logo: `${siteUrl}/icon.svg`,
+      email: "hello@reckon.markets",
+      description: SITE_DESCRIPTION,
+      sameAs: [
+        "https://x.com/reckon_markets",
+        "https://github.com/eugenennamdi/Reckon",
+      ],
+      contactPoint: [
+        {
+          "@type": "ContactPoint",
+          contactType: "technical support",
+          email: "hello@reckon.markets",
+          url: `${siteUrl}/contact`,
+          availableLanguage: ["English"],
+        },
+      ],
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Remote (Open-Source Protocol)",
+        addressCountry: "NG",
+      },
+    },
+  ],
 };
 
 export default function RootLayout({

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getChainReader } from "@/lib/reckon/chain";
 import { FEEDS, STAKE_TIERS, findStablecoin } from "@/lib/reckon/constants";
 import { computeIntegrityCheck } from "@/lib/x402/attestation";
@@ -120,10 +121,14 @@ export default async function SignalsPage() {
     <div className="space-y-10">
       <section className="space-y-3 border-b border-black/[0.06] pb-8">
         <h1 className="text-3xl font-semibold tracking-[-0.04em] leading-[1.05] text-foreground sm:text-[42px]">
-          Verified signal desk.
+          Verified signals.
         </h1>
         <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
-          Peer-to-peer probabilistic research gated on live on-chain calibration. Zero server custody — every payment settles directly to the forecaster&apos;s Agent ID wallet.
+          Buy live 4-hour market analysis directly from proven forecasters (76%+ accuracy across 3+ competitive rounds). Stablecoin payments settle straight to the forecaster&apos;s <code className="font-mono text-[13px] text-foreground">.ai</code> wallet with 0% fee.{" "}
+          <Link href="/docs#verified-signals" className="font-medium text-foreground underline decoration-black/25 underline-offset-4 hover:decoration-foreground">
+            How signals work
+          </Link>
+          .
         </p>
       </section>
 

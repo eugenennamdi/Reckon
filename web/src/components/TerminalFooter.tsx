@@ -44,8 +44,20 @@ export function TerminalFooter() {
             <Link href="/signals" className="transition-colors hover:text-foreground">
               Signals
             </Link>
+            <Link href="/docs" className="transition-colors hover:text-foreground">
+              Docs
+            </Link>
             <Link href="/security" className="transition-colors hover:text-foreground">
               Security
+            </Link>
+            <Link href="/about" className="transition-colors hover:text-foreground">
+              About
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/contact" className="transition-colors hover:text-foreground">
+              Contact
             </Link>
 
             <span className="hidden h-3 w-px bg-black/[0.12] sm:inline-block" aria-hidden="true" />
@@ -91,6 +103,15 @@ export function TerminalFooter() {
               <ArrowUpRight size={11} />
             </a>
             <a
+              href="/llms.txt"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+            >
+              <span>llms.txt</span>
+              <ArrowUpRight size={11} />
+            </a>
+            <a
               href="https://x.com/reckon_markets"
               target="_blank"
               rel="noreferrer"
@@ -98,12 +119,6 @@ export function TerminalFooter() {
             >
               <span>X</span>
               <ArrowUpRight size={11} />
-            </a>
-            <a
-              href="mailto:hello@reckon.markets"
-              className="transition-colors hover:text-foreground"
-            >
-              Contact
             </a>
           </nav>
         </div>
