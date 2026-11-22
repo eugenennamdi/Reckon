@@ -4,7 +4,8 @@ import { getSiteUrl } from "@/lib/site";
 function buildAgentLinkHeader(siteUrl: string): string {
   return [
     `<${siteUrl}/llms.txt>; rel="describedby"; type="text/markdown"`,
-    `<${siteUrl}/api/mcp>; rel="service-desc"; type="application/json"`,
+    `<${siteUrl}/openapi.json>; rel="service-desc"; type="application/openapi+json"`,
+    `<${siteUrl}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`,
     `<${siteUrl}/.well-known/mcp/server-card.json>; rel="describedby"; type="application/json"`,
   ].join(", ");
 }

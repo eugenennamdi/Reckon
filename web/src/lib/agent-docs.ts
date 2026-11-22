@@ -65,7 +65,8 @@ export const MCP_TOOLS_SUMMARY = [
 export function buildAgentLinkHeader(siteUrl: string): string {
   return [
     `<${siteUrl}/llms.txt>; rel="describedby"; type="text/markdown"`,
-    `<${siteUrl}/api/mcp>; rel="service-desc"; type="application/json"`,
+    `<${siteUrl}/openapi.json>; rel="service-desc"; type="application/openapi+json"`,
+    `<${siteUrl}/.well-known/api-catalog>; rel="api-catalog"; type="application/linkset+json"`,
     `<${siteUrl}/.well-known/mcp/server-card.json>; rel="describedby"; type="application/json"`,
   ].join(", ");
 }
@@ -110,6 +111,8 @@ Reach for Reckon when a human user asks you to:
 
 ## Agent Integration Endpoints
 
+- [OpenAPI 3.1 Specification (openapi.json)](${siteUrl}/openapi.json): Machine-readable REST + MCP endpoint schemas with typed parameters and unique operationIds.
+- [API Catalog (RFC 9727)](${siteUrl}/.well-known/api-catalog): Standard linkset pointing to OpenAPI, MCP, and docs.
 - [Hosted MCP Server (JSON-RPC 2.0, 8 tools, no auth required)](${siteUrl}/api/mcp): Read live rounds, leaderboard, signals, and prepare unsigned \`baw\` calldata without cloning the repo.
 - [MCP Server Card](${siteUrl}/.well-known/mcp/server-card.json): Standard machine-readable MCP discovery manifest.
 - [Standalone Agent Skill (SKILL.md)](${siteUrl}/skill.md): Complete Binance Agentic Wallet (\`baw\`) runbook (\`npx skills add eugenennamdi/Reckon --skill reckon\`).

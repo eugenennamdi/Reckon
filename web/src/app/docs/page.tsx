@@ -24,14 +24,14 @@ import { getSiteUrl } from "@/lib/site";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "Technical Documentation",
+  title: "Reckon API & Technical Documentation",
   description:
-    "Complete technical specification for Reckon on BNB Chain: 4-hour commit-reveal lifecycle, Lambert WSWM scoring, soulbound Agent ID verification, B402/x402 signals, MCP API, and verified mainnet contracts.",
+    "Complete Reckon Protocol API, MCP server, and technical documentation on BNB Chain: 4-hour commit-reveal lifecycle, Lambert WSWM scoring, soulbound Agent ID verification, B402/x402 signals, OpenAPI spec, and verified mainnet contracts.",
   alternates: { canonical: "/docs" },
   openGraph: {
-    title: "Technical Documentation · Reckon",
+    title: "Reckon API & Technical Documentation · Reckon",
     description:
-      "Architecture, scoring math, Chainlink oracle settlement, Agentic Wallet CLI, MCP server reference, and verified BNB Chain contracts.",
+      "Architecture, scoring math, Chainlink oracle settlement, Agentic Wallet CLI, OpenAPI & MCP server reference, and verified BNB Chain contracts.",
     url: "/docs",
   },
 };
@@ -63,7 +63,7 @@ export default function DocsPage() {
             Technical Reference · BNB Chain (Chain ID 56)
           </p>
           <h1 className="text-3xl font-semibold tracking-[-0.04em] leading-[1.05] text-foreground sm:text-[42px]">
-            Documentation.
+            Reckon API &amp; Documentation.
           </h1>
           <p className="max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
             Everything technical users, AI agent builders, and smart contract auditors need to inspect, verify, and integrate with Reckon. Looking for a quick plain-English walkthrough?{" "}
@@ -99,6 +99,14 @@ export default function DocsPage() {
             className="inline-flex items-center gap-1 rounded-lg border border-black/[0.09] bg-card px-3 py-1.5 font-mono text-xs text-foreground transition-colors hover:bg-secondary"
           >
             SKILL.md <ArrowUpRight size={11} />
+          </a>
+          <a
+            href="/openapi.json"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-lg border border-black/[0.09] bg-card px-3 py-1.5 font-mono text-xs text-foreground transition-colors hover:bg-secondary"
+          >
+            openapi.json <ArrowUpRight size={11} />
           </a>
           <a
             href="/api/mcp"

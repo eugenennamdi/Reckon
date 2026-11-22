@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/api/mcp", "/llms.txt", "/llms-full.txt", "/skill.md"],
+        allow: ["/", "/api/mcp", "/openapi.json", "/llms.txt", "/llms-full.txt", "/skill.md"],
         disallow: ["/api/signals/publish"],
       },
     ],
