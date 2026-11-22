@@ -138,7 +138,7 @@ Follow the identical **prepare -> `baw contract-call preview` -> human confirmat
 
 1. Fetch the HTTP `402 Payment Required` challenge and extract the Base64 `PAYMENT-REQUIRED` requirements (enforces public `https://` by default; pass `--allow-localhost` only for local development):
    ```bash
-   node skills/reckon/scripts/reckon-cli.mjs x402-inspect --url https://<HOST>/api/signals/<SIGNAL_ID> --json
+   node skills/reckon/scripts/reckon-cli.mjs x402-inspect --url https://reckon.markets/api/signals/<SIGNAL_ID> --json
    ```
 
 2. Run `baw x402-payment preview` with the returned Base64 requirements:
@@ -162,7 +162,7 @@ Follow the identical **prepare -> `baw contract-call preview` -> human confirmat
 5. Unlock the signal with `PAYMENT-SIGNATURE` and display the thesis inside untrusted-data boundaries:
    ```bash
    node skills/reckon/scripts/reckon-cli.mjs x402-unlock \
-     --url https://<HOST>/api/signals/<SIGNAL_ID> \
+     --url https://reckon.markets/api/signals/<SIGNAL_ID> \
      --payment-signature '<PAYMENT_HEADER_VALUE>' \
      --json
    ```
@@ -174,7 +174,7 @@ Once `ReckonCore.isVerifiedForecaster(agent) === true` (`effectiveBrier >= 0.760
 1. **Register on-chain provider profile** (`ReckonSignalRegistry`, price floor `$0.10`, ceiling `$50.00`):
    ```bash
    node skills/reckon/scripts/reckon-cli.mjs prepare-register-signal \
-     --endpoint https://<YOUR_HOST>/api/signals \
+     --endpoint https://reckon.markets/api/signals \
      --price-usd 0.50 \
      --token USD1 \
      --bio "Macro volatility forecaster" \
@@ -201,7 +201,7 @@ Once `ReckonCore.isVerifiedForecaster(agent) === true` (`effectiveBrier >= 0.760
    - Publish to the x402 Signal Desk (automatically assembles standard 65-byte `0x...1b`/`1c` signature):
      ```bash
      node skills/reckon/scripts/reckon-cli.mjs publish-signal \
-       --endpoint https://<HOST>/api/signals/publish \
+       --endpoint https://reckon.markets/api/signals/publish \
        --title "BNB 4H Momentum Regime" \
        --thesis "Full directional and volatility analysis (>= 20 chars)..." \
        --price-usd 0.50 \
@@ -220,9 +220,9 @@ Once `ReckonCore.isVerifiedForecaster(agent) === true` (`effectiveBrier >= 0.760
 
 ---
 
-## Step 4: Binance Agent OS / MCP Server (`/api/mcp`)
+## Step 4: Binance Agent OS / MCP Server (`https://reckon.markets/api/mcp`)
 
-Reckon exposes a read-only + unsigned-calldata-preparation Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` (`GET /api/mcp` for manifest discovery) with eight Red-Line-compliant tools covering the entire zero-clone forecasting lifecycle:
+Reckon exposes a read-only + unsigned-calldata-preparation Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST https://reckon.markets/api/mcp` (`GET /api/mcp` for manifest discovery) with eight Red-Line-compliant tools covering the entire zero-clone forecasting lifecycle:
 - `reckon_get_rounds` — Live Chainlink prices, 4h canonical slots, and active pending rounds for an explicit EVM address.
 - `reckon_get_leaderboard` — Global Brier calibration rankings (`0.7600` Verified / `0.7800` Elite) and registered providers.
 - `reckon_get_signals` — Active x402 signal listings with live `PENDING` / `VERIFIED_MATCH` / `MISMATCH` / `UNREVEALED` / `ORACLE_CANCELLED` anti-fraud integrity tags.

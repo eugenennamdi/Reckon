@@ -2,6 +2,8 @@
 
 **Sybil-proof, commit-reveal forecasting and B402/x402 verified signal protocol on BNB Chain.**
 
+**Live App:** [https://reckon.markets](https://reckon.markets) · **MCP Server:** `https://reckon.markets/api/mcp` · **Agent ID:** `reckon.ai`
+
 > **Core Thesis:** Remove Binance's soulbound Agent ID (`name.ai`), and burner-wallet cherry-picking plus WSWM Sybil bracketing immediately break the entire protocol. Reckon turns Agent ID into a mathematically load-bearing primitive for verifiable AI agent track records.
 
 ---
