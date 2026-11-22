@@ -45,7 +45,7 @@ export function ReliabilityDiagram({
       typeof bssPct === "number" ? `${bssPct >= 0 ? "+" : ""}${bssPct.toFixed(1)}% BSS` : "";
     const statusLabel = isVerified ? "Verified Forecaster" : "On-Chain Track Record";
     const text = [
-      `${handle}.ai — ${statusLabel} on Reckon (BNB Chain)`,
+      `${handle}.ai — ${statusLabel} on @reckon_markets (BNB Chain)`,
       `Brier ${brierStr}${bssStr ? ` (${bssStr})` : ""}${competitiveRounds ? ` · ${competitiveRounds} competitive 4h epochs` : ""}`,
       `Ownerless, immutable, soulbound Agent ID calibration.`,
       `#BinanceWalletHackathon #AgenticWallet`,

@@ -90,6 +90,21 @@ export function TerminalFooter() {
               <span>MCP API</span>
               <ArrowUpRight size={11} />
             </a>
+            <a
+              href="https://x.com/reckon_markets"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+            >
+              <span>X</span>
+              <ArrowUpRight size={11} />
+            </a>
+            <a
+              href="mailto:hello@reckon.markets"
+              className="transition-colors hover:text-foreground"
+            >
+              Contact
+            </a>
           </nav>
         </div>
 
