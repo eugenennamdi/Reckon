@@ -6,8 +6,6 @@ import {
   ArrowRight,
   CaretLeft,
   CaretRight,
-  CheckCircle,
-  Crown,
 } from "@phosphor-icons/react";
 import { formatEther } from "viem";
 import type { EffectiveProfileSnapshot } from "@/lib/reckon/chain";
@@ -82,7 +80,6 @@ export function CalibrationLeaderboard({
     [agents, selectedAddress],
   );
 
-  const verifiedBssPct = ((thresholds.minVerifiedBrier - 75_000_000) / 250_000).toFixed(1);
   const hasPrev = offset > 0;
   const hasNext = offset + PAGE_SIZE < totalAgents;
 
@@ -92,39 +89,39 @@ export function CalibrationLeaderboard({
       <Card className="overflow-hidden">
         <div className="grid grid-cols-2 divide-y divide-black/[0.06] sm:grid-cols-4 sm:divide-x sm:divide-y-0">
           <div className="p-6">
-            <div className="text-xs font-medium text-muted-foreground">Participating Agents</div>
+            <div className="text-xs font-medium text-muted-foreground">Forecasters</div>
             <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
               {totalAgents}
             </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              {deployed ? "Live on-chain opt-in registry" : "Live registry · Contract preview"}
+            <div className="mt-2 text-[11.5px] text-muted-foreground">
+              {deployed ? "On-chain .ai identities" : "Contract preview"}
             </div>
           </div>
           <div className="p-6">
-            <div className="text-xs font-medium text-muted-foreground">Verified Brier Gate</div>
+            <div className="text-xs font-medium text-muted-foreground">Verified score</div>
             <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
               ≥ {formatBrierScore(thresholds.minVerifiedBrier)}
             </div>
-            <div className="mt-2 font-mono text-[11px] text-muted-foreground">
-              +{verifiedBssPct}% BSS · Elite ≥ {formatBrierScore(thresholds.eliteBrier)}
+            <div className="mt-2 text-[11.5px] text-muted-foreground">
+              76%+ accuracy · Elite ≥ {formatBrierScore(thresholds.eliteBrier)}
             </div>
           </div>
           <div className="p-6">
-            <div className="text-xs font-medium text-muted-foreground">Min Competitive Epochs</div>
+            <div className="text-xs font-medium text-muted-foreground">Competitive rounds</div>
             <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
               ≥ {thresholds.minCompetitiveRounds}
             </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              Distinct 4h epochs (N ≥ 2)
+            <div className="mt-2 text-[11.5px] text-muted-foreground">
+              Distinct 4-hour rounds
             </div>
           </div>
           <div className="p-6">
-            <div className="text-xs font-medium text-muted-foreground">Min Reveal Discipline</div>
+            <div className="text-xs font-medium text-muted-foreground">Reveal rate</div>
             <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
               ≥ {(thresholds.minRevealRateBps / 100).toFixed(0)}%
             </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              Auto-penalized at revealEnd
+            <div className="mt-2 text-[11.5px] text-muted-foreground">
+              On-time reveals required
             </div>
           </div>
         </div>
@@ -137,11 +134,11 @@ export function CalibrationLeaderboard({
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="w-10">#</TableHead>
-                  <TableHead>Agent ID</TableHead>
-                  <TableHead className="text-right">Brier</TableHead>
-                  <TableHead className="text-right">BSS</TableHead>
+                  <TableHead>Forecaster</TableHead>
+                  <TableHead className="text-right">Accuracy</TableHead>
+                  <TableHead className="text-right">Skill</TableHead>
                   <TableHead className="text-right">Reveal</TableHead>
-                  <TableHead className="text-right">Epochs</TableHead>
+                  <TableHead className="text-right">Rounds</TableHead>
                   <TableHead className="text-right">Volume</TableHead>
                   <TableHead className="text-right">Status</TableHead>
                 </TableRow>
@@ -151,21 +148,21 @@ export function CalibrationLeaderboard({
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={8} className="p-8 font-sans">
                       <div className="max-w-md space-y-4">
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-semibold text-foreground">
-                            Awaiting first settled forecasts
+                        <div className="space-y-1.5">
+                          <h3 className="text-[15px] font-semibold text-foreground">
+                            No scored forecasters yet
                           </h3>
-                          <p className="text-xs leading-relaxed text-muted-foreground">
-                            Forecasters appear automatically after their first on-chain commit. Earn Verified status by scoring ≥{" "}
+                          <p className="text-[13px] leading-relaxed text-muted-foreground">
+                            Forecasters appear automatically after their first prediction. Earn Verified status by maintaining ≥{" "}
                             <span className="font-mono text-foreground">
                               {formatBrierScore(thresholds.minVerifiedBrier)}
                             </span>{" "}
-                            across ≥ {thresholds.minCompetitiveRounds} distinct competitive 4-hour epochs with ≥ 80% reveal discipline.
+                            across ≥ {thresholds.minCompetitiveRounds} competitive 4-hour rounds with an 80%+ reveal rate.
                           </p>
                         </div>
                         <Button asChild size="sm" variant="default">
                           <Link href="/">
-                            Open forecasting markets
+                            Open markets
                             <ArrowRight size={13} />
                           </Link>
                         </Button>
@@ -177,13 +174,14 @@ export function CalibrationLeaderboard({
                     const selected =
                       selectedAgent?.address.toLowerCase() === a.address.toLowerCase();
                     const isElite = a.isVerified && a.meanBrier >= thresholds.eliteBrier;
+                    const hasReveals = a.roundsRevealed > 0;
                     return (
                       <TableRow
                         key={a.address}
                         data-state={selected ? "selected" : undefined}
                         onClick={() => setSelectedAddress(a.address)}
-                        className={`cursor-pointer hover:bg-accent/40 ${
-                          selected ? "shadow-[inset_2px_0_0_var(--foreground)]" : ""
+                        className={`cursor-pointer transition-colors hover:bg-[#FAFAFB] ${
+                          selected ? "bg-[#FAFAFB]" : ""
                         }`}
                       >
                         <TableCell className="text-muted-foreground">
@@ -202,14 +200,16 @@ export function CalibrationLeaderboard({
                         </TableCell>
                         <TableCell
                           className={`text-right ${
-                            a.bssPct >= 4
-                              ? "font-semibold text-foreground"
-                              : a.bssPct < 0
-                                ? "text-destructive"
-                                : "text-muted-foreground"
+                            !hasReveals
+                              ? "text-muted-foreground"
+                              : a.bssPct >= 4
+                                ? "font-semibold text-foreground"
+                                : a.bssPct < 0
+                                  ? "text-destructive"
+                                  : "text-muted-foreground"
                           }`}
                         >
-                          {a.roundsScored > 0
+                          {hasReveals
                             ? `${a.bssPct >= 0 ? "+" : ""}${a.bssPct.toFixed(1)}%`
                             : "—"}
                         </TableCell>
@@ -227,17 +227,17 @@ export function CalibrationLeaderboard({
                         </TableCell>
                         <TableCell className="text-right">
                           {isElite ? (
-                            <Badge variant="warning">
-                              <Crown size={10} weight="fill" />
-                              ELITE
+                            <Badge variant="warning" className="font-sans text-[11px] font-medium">
+                              Elite
                             </Badge>
                           ) : a.isVerified ? (
-                            <Badge variant="positive">
-                              <CheckCircle size={10} weight="fill" />
-                              VERIFIED
+                            <Badge variant="positive" className="font-sans text-[11px] font-medium">
+                              Verified
                             </Badge>
                           ) : (
-                            <Badge variant="secondary">TRACKING</Badge>
+                            <Badge variant="secondary" className="font-sans text-[11px] font-medium">
+                              Tracking
+                            </Badge>
                           )}
                         </TableCell>
                       </TableRow>

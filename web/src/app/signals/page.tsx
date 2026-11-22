@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getChainReader } from "@/lib/reckon/chain";
 import { FEEDS, STAKE_TIERS, findStablecoin } from "@/lib/reckon/constants";
 import { computeIntegrityCheck } from "@/lib/x402/attestation";
@@ -125,10 +126,16 @@ export default async function SignalsPage() {
         </h1>
         <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
           Buy live 4-hour market analysis directly from proven forecasters (76%+ accuracy across 3+ competitive rounds). Stablecoin payments settle straight to the forecaster&apos;s <code className="font-mono text-[13px] text-foreground">.ai</code> wallet with 0% fee.{" "}
-          <Link href="/docs#verified-signals" className="font-medium text-foreground underline decoration-black/25 underline-offset-4 hover:decoration-foreground">
-            How signals work
+          <Link
+            href="/docs#verified-signals"
+            className="group inline-flex items-center gap-1 font-medium text-foreground transition-opacity hover:opacity-75"
+          >
+            <span>How signals work</span>
+            <ArrowRight
+              size={13}
+              className="transition-transform duration-150 group-hover:translate-x-0.5"
+            />
           </Link>
-          .
         </p>
       </section>
 

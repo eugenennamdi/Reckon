@@ -93,23 +93,24 @@ export function ReliabilityDiagram({
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex-row items-start justify-between gap-3 border-b border-border pb-4">
+      <CardHeader className="flex-row items-start justify-between gap-3 border-b border-black/[0.06] pb-4">
         <div className="space-y-1">
-          <CardTitle className="font-mono text-sm">
-            {handle ? `${handle}.ai` : "Aggregate"} calibration curve
+          <CardTitle className="text-[15px] font-semibold tracking-[-0.015em]">
+            {handle ? `${handle}.ai` : "Aggregate"} accuracy
           </CardTitle>
-          <CardDescription>
-            10-decile on-chain reliability diagram ({totalSamples} scored reveals)
+          <CardDescription className="text-xs">
+            Predicted confidence vs. actual outcomes ({totalSamples}{" "}
+            {totalSamples === 1 ? "reveal" : "reveals"})
           </CardDescription>
         </div>
         <div className="flex shrink-0 items-center gap-3 whitespace-nowrap text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
             <span className="h-px w-3 border-t border-dashed border-muted-foreground/70" />
-            Ideal y = x
+            Perfect
           </span>
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
             <span className="h-2 w-2 rounded-full bg-foreground" />
-            Empirical
+            Actual
           </span>
         </div>
       </CardHeader>
@@ -192,14 +193,26 @@ export function ReliabilityDiagram({
           />
 
           {activePoints.length === 0 && (
-            <text
-              x={padL + plotW / 2}
-              y={padT + plotH / 2 - 8}
-              textAnchor="middle"
-              className="fill-muted-foreground font-mono text-[11px]"
-            >
-              Awaiting settled reveals
-            </text>
+            <g>
+              <rect
+                x={padL + plotW / 2 - 86}
+                y={padT + plotH / 2 - 14}
+                width={172}
+                height={26}
+                rx={6}
+                fill="var(--card)"
+                stroke="var(--border)"
+                strokeWidth="1"
+              />
+              <text
+                x={padL + plotW / 2}
+                y={padT + plotH / 2 + 3}
+                textAnchor="middle"
+                className="fill-muted-foreground font-sans text-[11px] font-medium"
+              >
+                No revealed predictions yet
+              </text>
+            </g>
           )}
 
           {areaD && <path d={areaD} fill="url(#reckon-cal-fill)" />}
@@ -253,38 +266,37 @@ export function ReliabilityDiagram({
             x={padL + plotW / 2}
             y={height - 6}
             textAnchor="middle"
-            className="fill-muted-foreground font-mono text-[10px]"
+            className="fill-muted-foreground font-sans text-[10px]"
           >
-            Forecast probability decile
+            Predicted confidence
           </text>
           <text
             x={13}
             y={padT + plotH / 2}
             textAnchor="middle"
             transform={`rotate(-90, 13, ${padT + plotH / 2})`}
-            className="fill-muted-foreground font-mono text-[10px]"
+            className="fill-muted-foreground font-sans text-[10px]"
           >
-            Empirical hit rate
+            Actual win rate
           </text>
         </svg>
 
-        <div className="mt-3 flex min-h-[28px] flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-mono text-[11px] tabular-nums">
+        <div className="mt-3 flex min-h-[28px] flex-wrap items-center justify-between gap-2 border-t border-black/[0.06] pt-3 text-[11.5px] tabular-nums">
           {hovered && hovered.freq !== null ? (
             <>
-              <span className="text-foreground">
-                Bin <strong className="font-semibold text-foreground">{hovered.label}</strong> · {hovered.hits}/
-                {hovered.count} hits ({(hovered.freq * 100).toFixed(1)}%)
+              <span className="font-mono text-foreground">
+                {hovered.label} · {hovered.hits}/{hovered.count} right ({(hovered.freq * 100).toFixed(1)}%)
               </span>
               {hoveredDelta !== null && (
-                <span className="text-muted-foreground">
-                  Δ {hoveredDelta >= 0 ? "+" : ""}
-                  {hoveredDelta.toFixed(1)} pp vs ideal
+                <span className="font-mono text-muted-foreground">
+                  {hoveredDelta >= 0 ? "+" : ""}
+                  {hoveredDelta.toFixed(1)} pp vs perfect
                 </span>
               )}
             </>
           ) : (
             <span className="text-muted-foreground">
-              Hover a decile node to inspect exact on-chain hit rates.
+              Hover any point to compare predicted confidence against actual outcomes.
             </span>
           )}
           {shareUrl && (
@@ -292,7 +304,7 @@ export function ReliabilityDiagram({
               href={shareUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 font-sans text-[11px] font-medium text-foreground/85 underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              className="inline-flex items-center gap-1 font-medium text-foreground/85 transition-colors hover:text-foreground"
             >
               <span>Share scorecard on X</span>
               <ArrowUpRight size={12} />

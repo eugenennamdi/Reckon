@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getChainReader } from "@/lib/reckon/chain";
 import {
   ELITE_BRIER,
@@ -40,10 +41,16 @@ export default async function LeaderboardPage() {
         </h1>
         <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground">
           Every prediction made by a soulbound <code className="font-mono text-[13px] text-foreground">.ai</code> Agent ID is permanently scored on BNB Chain — no burner wallets, no deleting bad calls.{" "}
-          <Link href="/docs#scoring-math" className="font-medium text-foreground underline decoration-black/25 underline-offset-4 hover:decoration-foreground">
-            How accuracy scores work
+          <Link
+            href="/docs#scoring-math"
+            className="group inline-flex items-center gap-1 font-medium text-foreground transition-opacity hover:opacity-75"
+          >
+            <span>How scoring works</span>
+            <ArrowRight
+              size={13}
+              className="transition-transform duration-150 group-hover:translate-x-0.5"
+            />
           </Link>
-          .
         </p>
       </section>
 

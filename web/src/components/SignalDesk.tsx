@@ -4,15 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
-  Broadcast,
   Check,
-  CheckCircle,
   Copy,
-  LockKeyOpen,
-  PaperPlaneTilt,
-  ShieldCheck,
-  TerminalWindow,
-  UsersThree,
   WarningCircle,
 } from "@phosphor-icons/react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -142,8 +135,8 @@ function integrityVariant(status: IntegrityCheckResult["status"]): BadgeProps["v
 }
 
 function formatFacilitatorLabel(mode: string): string {
-  if (mode === "binance-b402") return "Binance B402";
-  if (mode === "self-hosted-bsc") return "x402 v2 · Self-Hosted";
+  if (mode === "binance-b402") return "Binance B402 · 0% fee";
+  if (mode === "self-hosted-bsc") return "Direct P2P · 0% fee";
   return mode;
 }
 
@@ -658,25 +651,19 @@ export function SignalDesk({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList>
           <TabsTrigger value="feed">
-            <Broadcast size={14} weight="duotone" />
-            Catalog ({signals.length})
+            Signals ({signals.length})
           </TabsTrigger>
           <TabsTrigger value="providers">
-            <UsersThree size={14} weight="duotone" />
-            Providers ({providers.length})
+            Forecasters ({providers.length})
           </TabsTrigger>
           <TabsTrigger value="publish">
-            <PaperPlaneTilt size={14} weight="duotone" />
-            Publish attestation
+            Publish signal
           </TabsTrigger>
         </TabsList>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Settlement</span>
-          <Badge variant="default" className="rounded-md font-sans text-[11px] font-medium">
-            {formatFacilitatorLabel(facilitatorMode)}
-          </Badge>
-        </div>
+        <span className="inline-flex items-center rounded-lg border border-black/[0.08] bg-card px-2.5 py-1 text-[11.5px] font-medium text-muted-foreground">
+          {formatFacilitatorLabel(facilitatorMode)}
+        </span>
       </div>
 
       {/* CATALOG TAB */}
@@ -684,28 +671,25 @@ export function SignalDesk({
         <div className="grid items-start gap-8 lg:grid-cols-12">
           <div className="min-w-0 space-y-4 lg:col-span-7">
             {signals.length === 0 ? (
-              <Card className="p-6">
-                <div className="max-w-lg space-y-4">
-                  <div className="space-y-1.5">
+              <Card className="p-7">
+                <div className="max-w-lg space-y-5">
+                  <div className="space-y-2">
                     <h3 className="text-[15px] font-semibold tracking-[-0.015em] text-foreground">
-                      Awaiting verified forecaster attestations
+                      No live signals yet
                     </h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">
-                      Forecasters scoring{" "}
-                      <span className="font-mono font-medium text-foreground">≥ 0.7600 Brier</span>{" "}
-                      across <span className="font-mono font-medium text-foreground">≥ 3</span> distinct competitive 4-hour epochs can publish EIP-712 attested theses during active{" "}
-                      <span className="font-mono font-medium text-foreground">LOCKED</span> rounds for direct peer-to-peer x402 v2 settlement.
+                    <p className="text-[13.5px] leading-[1.6] text-muted-foreground">
+                      Forecasters who maintain 76%+ accuracy across 3 or more competitive 4-hour rounds can publish live market analysis here while a round is locked and receive stablecoin payments directly to their wallet.
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button asChild size="sm" variant="default">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <Button asChild size="sm" variant="default" className="h-9 rounded-lg px-4 text-xs">
                       <Link href="/">
-                        Build track record
+                        Start forecasting
                         <ArrowRight size={13} />
                       </Link>
                     </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href="/security">Review x402 security</Link>
+                    <Button asChild size="sm" variant="outline" className="h-9 rounded-lg px-4 text-xs">
+                      <Link href="/docs#verified-signals">How verification works</Link>
                     </Button>
                   </div>
                 </div>
@@ -729,7 +713,7 @@ export function SignalDesk({
                           <span className="text-border-strong">·</span>
                           <span className="font-medium tabular-nums text-foreground/85">
                             {formatBrierScore(sig.meanBrier)} ({sig.bssPct >= 0 ? "+" : ""}
-                            {sig.bssPct.toFixed(1)}% BSS)
+                            {sig.bssPct.toFixed(1)}% skill)
                           </span>
                           <span className="text-border-strong">·</span>
                           <span className="text-muted-foreground">
@@ -759,13 +743,13 @@ export function SignalDesk({
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-black/[0.06] pt-3">
                       <div className="font-mono text-[11px] text-muted-foreground">
                         {sig.claimedProbRedacted ? (
-                          <span>Probability sealed until resolveTime</span>
+                          <span>Confidence sealed until round settles</span>
                         ) : (
                           <span>
-                            Claimed {(Number(sig.claimedProbBps ?? 0) / 100).toFixed(2)}%
+                            Stated {(Number(sig.claimedProbBps ?? 0) / 100).toFixed(2)}%
                             {sig.integrity.onChainRevealedProbBps !== null &&
                               ` · On-chain ${(
                                 sig.integrity.onChainRevealedProbBps / 100
@@ -780,8 +764,7 @@ export function SignalDesk({
                         variant={isSelected ? "default" : "secondary"}
                         onClick={() => openUnlockDrawer(sig)}
                       >
-                        <LockKeyOpen size={13} />
-                        Inspect / Unlock
+                        Unlock signal
                       </Button>
                     </div>
                   </Card>
@@ -790,30 +773,30 @@ export function SignalDesk({
             )}
           </div>
 
-          {/* Right: Sticky x402 Settlement Inspector */}
+          {/* Right: Sticky Signal Checkout */}
           <div className="min-w-0 lg:sticky lg:top-24 lg:col-span-5 lg:self-start">
             {activeSignal ? (
               <Card className="surface-elevated">
-                <CardHeader className="border-b border-border pb-4">
+                <CardHeader className="border-b border-black/[0.06] pb-4">
                   <div className="flex items-center justify-between gap-2">
-                    <Badge variant="default">HTTP 402 · x402 v2</Badge>
+                    <Badge variant="secondary" className="font-sans text-[11px] font-medium">
+                      Direct P2P
+                    </Badge>
                     <Badge variant={integrityVariant(activeSignal.integrity.status)}>
                       {activeSignal.integrity.status}
                     </Badge>
                   </div>
                   <CardTitle className="mt-2 text-base">{activeSignal.title}</CardTitle>
-                  <CardDescription className="flex items-center gap-1.5 font-mono text-[11px]">
-                    <ShieldCheck size={13} className="shrink-0 text-foreground/75" />
-                    <span className="truncate">payTo: {activeSignal.seller}</span>
+                  <CardDescription className="truncate font-mono text-[11px]">
+                    Recipient: {activeSignal.seller}
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-4 pt-4">
                   {unlockedResult ? (
-                    <div className="space-y-3 rounded-lg border border-border-strong bg-secondary/55 p-3.5 text-xs">
+                    <div className="space-y-3 rounded-lg border border-black/[0.08] bg-secondary/55 p-3.5 text-xs">
                       <div className="flex items-center justify-between font-mono text-[11px]">
-                        <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
-                          <CheckCircle size={13} weight="fill" />
+                        <span className="font-medium text-foreground">
                           Unlocked ({unlockedResult.mode})
                         </span>
                         <span className="font-semibold text-foreground">
@@ -823,7 +806,7 @@ export function SignalDesk({
                       <p className="whitespace-pre-wrap leading-relaxed text-foreground/95">
                         {unlockedResult.thesis}
                       </p>
-                      <div className="border-t border-border pt-2 font-mono text-[10px] break-all text-muted-foreground">
+                      <div className="border-t border-black/[0.06] pt-2 font-mono text-[10px] break-all text-muted-foreground">
                         Settlement tx: {unlockedResult.txHash}
                       </div>
                     </div>
@@ -831,7 +814,7 @@ export function SignalDesk({
                     <>
                       <div className="space-y-2">
                         <div className="text-xs font-medium text-foreground">
-                          BSC settlement stablecoin
+                          Payment stablecoin
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           {BSC_STABLECOINS.map((c) => {
@@ -852,8 +835,8 @@ export function SignalDesk({
                                 </div>
                                 <div className="mt-0.5 text-[10px] text-muted-foreground">
                                   {c.assetTransferMethod === "eip3009"
-                                    ? "EIP-3009 · 0 approvals"
-                                    : "Permit2 · 1st-time approve"}
+                                    ? "Gasless signature"
+                                    : "1-time token approval"}
                                 </div>
                               </button>
                             );
@@ -897,8 +880,7 @@ export function SignalDesk({
 
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                            <TerminalWindow size={13} className="text-foreground/75" />
+                          <span className="text-[11px] font-medium text-muted-foreground">
                             Unlock via <code className="font-mono text-foreground">baw</code> CLI
                           </span>
                           <Button
@@ -927,33 +909,32 @@ export function SignalDesk({
                       </div>
                     </>
                   )}
-                  <p className="border-t border-black/[0.06] pt-3 text-[11px] leading-relaxed text-muted-foreground">
-                    Signal purchases do not ensure accuracy or profit. Smart contract &amp; oracle risks apply; not financial advice — DYOR.{" "}
+                  <p className="border-t border-black/[0.06] pt-3 text-[11.5px] leading-relaxed text-muted-foreground">
+                    Signal purchases do not ensure accuracy or profit. Smart contract &amp; oracle risks apply; not financial advice.{" "}
                     <Link
                       href="/security"
-                      className="font-medium text-foreground/80 underline decoration-black/20 underline-offset-2 hover:text-foreground"
+                      className="font-medium text-foreground/85 transition-colors hover:text-foreground"
                     >
-                      Risk model
+                      Security &amp; risks
                     </Link>
                   </p>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="space-y-4 p-6">
-                <div className="space-y-1.5">
+              <Card className="space-y-5 p-7">
+                <div className="space-y-2">
                   <h3 className="text-[15px] font-semibold tracking-[-0.015em] text-foreground">
-                    x402 Settlement Inspector
+                    Signal checkout
                   </h3>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Select any signal listing on the left to inspect its HTTP 402 payment challenge, verify direct peer-to-peer recipient settlement, and unlock via EVM wallet or{" "}
-                    <code className="font-mono text-foreground">baw</code> CLI.
+                  <p className="text-[13.5px] leading-[1.6] text-muted-foreground">
+                    Select any signal on the left to review the forecaster&apos;s accuracy, verify the direct wallet recipient, and unlock the full analysis in USD1, USDT, or USDC using your wallet or AI agent.
                   </p>
                 </div>
-                <p className="border-t border-black/[0.06] pt-3.5 text-[11px] leading-relaxed text-muted-foreground">
-                  Signal purchases do not ensure accuracy or profit. Smart contract &amp; oracle risks apply; not financial advice — always DYOR.{" "}
+                <p className="border-t border-black/[0.06] pt-4 text-[11.5px] leading-relaxed text-muted-foreground">
+                  Signal purchases do not ensure accuracy or profit. Smart contract &amp; oracle risks apply; not financial advice.{" "}
                   <Link
                     href="/security"
-                    className="font-medium text-foreground/80 underline decoration-black/20 underline-offset-2 hover:text-foreground"
+                    className="font-medium text-foreground/85 transition-colors hover:text-foreground"
                   >
                     Security &amp; risks
                   </Link>
@@ -969,36 +950,37 @@ export function SignalDesk({
         <div className="grid items-start gap-8 lg:grid-cols-12">
           <div className="min-w-0 space-y-4 lg:col-span-7">
             {providers.length === 0 ? (
-              <Card className="p-6">
-                <div className="max-w-md space-y-1.5">
+              <Card className="p-7">
+                <div className="max-w-md space-y-2">
                   <h3 className="text-[15px] font-semibold tracking-[-0.015em] text-foreground">
-                    No on-chain signal providers registered yet
+                    No verified forecasters listed yet
                   </h3>
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    Once an Agent ID earns Verified status on{" "}
-                    <span className="font-mono text-foreground">ReckonCore</span>, register an HTTPS x402 endpoint on{" "}
-                    <span className="font-mono text-foreground">ReckonSignalRegistry</span> using the form on the right.
+                  <p className="text-[13.5px] leading-[1.6] text-muted-foreground">
+                    Once a <code className="font-mono text-xs text-foreground">.ai</code> Agent ID earns Verified status, it can register a price and publish live market analysis directly to its wallet using the form on the right.
                   </p>
                 </div>
               </Card>
             ) : (
               providers.map((p) => (
-                <Card key={p.agent} className="p-4">
+                <Card key={p.agent} className="p-5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono text-sm font-semibold text-foreground">
                       {p.handle}.ai
                     </span>
-                    <Badge variant={p.listingActive ? "positive" : "secondary"}>
-                      {p.listingActive ? "ACTIVE VERIFIED" : "INACTIVE"}
+                    <Badge
+                      variant={p.listingActive ? "positive" : "secondary"}
+                      className="font-sans text-[11px] font-medium"
+                    >
+                      {p.listingActive ? "Verified" : "Inactive"}
                     </Badge>
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{p.bio}</p>
-                  <div className="mt-3 flex flex-wrap gap-4 border-t border-border pt-3 font-mono text-[11px] tabular-nums text-muted-foreground">
+                  <div className="mt-3 flex flex-wrap gap-4 border-t border-black/[0.06] pt-3 font-mono text-[11px] tabular-nums text-muted-foreground">
                     <span>
-                      Brier <strong className="text-foreground">{formatBrierScore(p.meanBrier)}</strong>
+                      Accuracy <strong className="text-foreground">{formatBrierScore(p.meanBrier)}</strong>
                     </span>
                     <span>Reveal {(p.revealRateBps / 100).toFixed(1)}%</span>
-                    <span>Epochs {p.competitiveRoundsScored}</span>
+                    <span>Rounds {p.competitiveRoundsScored}</span>
                     <span>Price ${formatAtomicUsd(p.priceAtomic)}</span>
                   </div>
                 </Card>
@@ -1008,16 +990,16 @@ export function SignalDesk({
 
           <Card className="lg:col-span-5">
             <CardHeader className="border-b border-black/[0.06] pb-4">
-              <CardTitle>Register provider listing</CardTitle>
+              <CardTitle>List yourself as a forecaster</CardTitle>
               <CardDescription>
-                Verified Forecaster status is enforced live on-chain via ReckonCore.
+                Verified Forecaster status is checked live on-chain before listing.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
               <form onSubmit={handleRegisterProvider} className="space-y-4">
                 <div className="space-y-1.5">
                   <label htmlFor="reg-url" className="block text-xs font-medium text-foreground/90">
-                    HTTPS signal endpoint
+                    Signal API endpoint
                   </label>
                   <Input
                     id="reg-url"
@@ -1069,7 +1051,7 @@ export function SignalDesk({
 
                 <div className="space-y-1.5">
                   <label htmlFor="reg-bio" className="block text-xs font-medium text-foreground/90">
-                    Methodology bio (max 280 chars)
+                    Short bio &amp; approach (max 280 chars)
                   </label>
                   <Textarea
                     id="reg-bio"
@@ -1078,7 +1060,7 @@ export function SignalDesk({
                     maxLength={280}
                     value={regBio}
                     onChange={(e) => setRegBio(e.target.value)}
-                    placeholder="Describe your forecasting methodology and data inputs…"
+                    placeholder="Describe your forecasting approach and data sources…"
                   />
                 </div>
 
@@ -1114,10 +1096,9 @@ export function SignalDesk({
         <div className="grid items-start gap-8 lg:grid-cols-12">
           <Card className="min-w-0 lg:col-span-7">
             <CardHeader className="border-b border-black/[0.06] pb-4">
-              <CardTitle>Publish attested signal</CardTitle>
+              <CardTitle>Publish a signal</CardTitle>
               <CardDescription>
-                Sign an EIP-712 attestation for an active{" "}
-                <span className="font-mono text-foreground">LOCKED</span> round. Claimed probability is audited automatically against your on-chain reveal.
+                Attach analysis to a locked 4-hour round. Your stated confidence is audited automatically against your on-chain reveal.
               </CardDescription>
             </CardHeader>
 
@@ -1127,16 +1108,15 @@ export function SignalDesk({
                   <div className="surface-well space-y-2 rounded-xl p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                       <span className="font-medium text-foreground">
-                        Active LOCKED rounds ({lockedAgentRounds.length})
+                        Your locked rounds ({lockedAgentRounds.length})
                       </span>
                       <span className="text-[11px] text-muted-foreground">
-                        Auto-fills coordinates &amp; local salt
+                        Auto-fills from your saved prediction
                       </span>
                     </div>
                     {lockedAgentRounds.length === 0 ? (
                       <p className="text-xs leading-relaxed text-muted-foreground">
-                        No active <span className="font-mono text-foreground">LOCKED</span> commitments detected for this wallet. Commit during any 4-hour{" "}
-                        <span className="font-mono text-foreground">OPEN</span> window, or enter coordinates below.
+                        No locked predictions found for this wallet. Place a prediction during an open 4-hour window first, or enter round details below.
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
@@ -1188,7 +1168,7 @@ export function SignalDesk({
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-foreground/90">Feed</label>
+                    <label className="block text-xs font-medium text-foreground/90">Market</label>
                     <Select
                       value={String(pubFeedId)}
                       onValueChange={(v) => setPubFeedId(Number(v))}
@@ -1232,7 +1212,7 @@ export function SignalDesk({
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-1.5">
                   <label htmlFor="pub-prob" className="block text-xs font-medium text-foreground/90">
-                    Claimed probability (%)
+                    Stated confidence (%)
                   </label>
                   <Input
                     id="pub-prob"
@@ -1306,13 +1286,13 @@ export function SignalDesk({
                   maxLength={280}
                   value={pubSummary}
                   onChange={(e) => setPubSummary(e.target.value)}
-                  placeholder="Visible before payment — do not leak your sealed probability"
+                  placeholder="Visible before purchase — keep your sealed confidence private"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label htmlFor="pub-thesis" className="block text-xs font-medium text-foreground/90">
-                  Full thesis (AES-256-GCM encrypted at rest)
+                  Full market analysis (encrypted)
                 </label>
                 <Textarea
                   id="pub-thesis"
@@ -1322,7 +1302,7 @@ export function SignalDesk({
                   maxLength={4000}
                   value={pubThesis}
                   onChange={(e) => setPubThesis(e.target.value)}
-                  placeholder="Detailed probabilistic thesis unlocked only after verified x402 settlement…"
+                  placeholder="Detailed analysis unlocked only after verified stablecoin payment…"
                 />
               </div>
 
@@ -1345,9 +1325,9 @@ export function SignalDesk({
                     className="w-full"
                   >
                     {isPublishing
-                      ? "Signing EIP-712 attestation…"
+                      ? "Signing & publishing…"
                       : isVerified
-                        ? "Sign EIP-712 attestation & publish"
+                        ? "Sign & publish signal"
                         : "Requires Verified Forecaster status"}
                   </Button>
                 )}
@@ -1360,45 +1340,32 @@ export function SignalDesk({
             <CardHeader className="border-b border-black/[0.06] pb-4">
               <CardTitle>Publishing eligibility</CardTitle>
               <CardDescription>
-                Live on-chain requirements verified before listing
+                Live on-chain requirements checked before listing
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-5 text-xs">
               <div className="divide-y divide-black/[0.06]">
                 <div className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
                   <span className="text-muted-foreground">Wallet connected</span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-foreground">
-                    {isConnected ? (
-                      <>
-                        <CheckCircle size={13} weight="fill" />
-                        Ready
-                      </>
-                    ) : (
-                      <span className="text-muted-foreground">Required</span>
-                    )}
+                  <span className="font-mono text-[11px] font-medium text-foreground">
+                    {isConnected ? "Ready" : <span className="text-muted-foreground">Required</span>}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-2.5">
-                  <span className="text-muted-foreground">Verified Forecaster (≥ 0.7600)</span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-foreground">
+                  <span className="text-muted-foreground">Verified Forecaster (76%+)</span>
+                  <span className="font-mono text-[11px] font-medium text-foreground">
                     {isVerified ? (
-                      <>
-                        <CheckCircle size={13} weight="fill" />
-                        Verified
-                      </>
+                      "Verified"
                     ) : (
                       <span className="text-muted-foreground">Pending track record</span>
                     )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 py-2.5 last:pb-0">
-                  <span className="text-muted-foreground">Active LOCKED commitment</span>
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium text-foreground">
+                  <span className="text-muted-foreground">Locked round prediction</span>
+                  <span className="font-mono text-[11px] font-medium text-foreground">
                     {lockedAgentRounds.length > 0 ? (
-                      <>
-                        <CheckCircle size={13} weight="fill" />
-                        {lockedAgentRounds.length} active
-                      </>
+                      `${lockedAgentRounds.length} active`
                     ) : (
                       <span className="text-muted-foreground">None detected</span>
                     )}
@@ -1406,11 +1373,10 @@ export function SignalDesk({
                 </div>
               </div>
 
-              <div className="surface-well space-y-1.5 rounded-xl p-4 text-[11px] leading-relaxed text-muted-foreground">
-                <div className="font-medium text-foreground">Anti-bluffing audit</div>
+              <div className="surface-well space-y-1.5 rounded-xl p-4 text-[11.5px] leading-relaxed text-muted-foreground">
+                <div className="font-medium text-foreground">Anti-bluffing check</div>
                 <p>
-                  Your signed probability stays redacted while the round is{" "}
-                  <span className="font-mono text-foreground">LOCKED</span> and is automatically audited against your on-chain reveal after settlement.
+                  Your stated confidence stays hidden while the round is locked and is automatically checked against your on-chain reveal after settlement.
                 </p>
               </div>
             </CardContent>
