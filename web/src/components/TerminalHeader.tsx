@@ -9,7 +9,6 @@ import {
   ArrowsClockwise,
   CaretDown,
   Check,
-  CheckCircle,
   Copy,
   SignOut,
 } from "@phosphor-icons/react";
@@ -167,9 +166,9 @@ export function TerminalHeader() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-black/[0.06] bg-background/85 backdrop-blur-md">
-        <div className="mx-auto grid h-16 max-w-[1240px] grid-cols-[1fr_auto] items-center gap-4 px-4 sm:px-6 md:grid-cols-[1fr_auto_1fr] lg:px-8">
-          {/* Left: Brand Lockup */}
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+          {/* Left: Brand Lockup + Unboxed Navigation */}
+          <div className="flex h-full min-w-0 items-center gap-8">
             <Link href="/" className="group inline-flex shrink-0 items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background shadow-[0_1px_3px_rgba(0,0,0,0.18)] transition-opacity duration-150 group-hover:opacity-85">
                 <ReckonMark size={17} />
@@ -178,43 +177,45 @@ export function TerminalHeader() {
                 Reckon
               </span>
             </Link>
+
+            <nav aria-label="Primary" className="hidden h-full items-center gap-6 md:flex">
+              {NAV_ITEMS.map((item) => {
+                const active = activeHref === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch={true}
+                    onClick={() => {
+                      if (item.href !== pathname) setPendingHref(item.href);
+                    }}
+                    className={`relative inline-flex h-full items-center whitespace-nowrap text-[13px] transition-colors duration-150 ${
+                      active
+                        ? "font-medium text-foreground"
+                        : "font-normal text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {item.label}
+                    {active && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute inset-x-0 -bottom-px h-[1.5px] bg-foreground"
+                      />
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
-          {/* Center: Floating Segmented Pill Navigation */}
-          <nav
-            aria-label="Primary"
-            className="hidden items-center gap-0.5 rounded-full bg-black/[0.045] p-1 ring-1 ring-black/[0.04] md:flex"
-          >
-            {NAV_ITEMS.map((item) => {
-              const active = activeHref === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={true}
-                  onClick={() => {
-                    if (item.href !== pathname) setPendingHref(item.href);
-                  }}
-                  className={`pressable whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium ${
-                    active
-                      ? "bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Right: Compact Non-Wrapping Network & Account Controls */}
-          <div className="flex min-w-0 items-center justify-end gap-2">
+          {/* Right: Quiet Help Link + Single Primary Wallet Control */}
+          <div className="flex shrink-0 items-center gap-4">
             <OnboardingModalTrigger />
             {!mounted ? (
               <div className="h-8 w-28 animate-pulse rounded-lg bg-black/[0.06]" />
             ) : isConnected && address ? (
               <>
-                {wrongChain ? (
+                {wrongChain && (
                   <Button
                     type="button"
                     size="xs"
@@ -226,11 +227,6 @@ export function TerminalHeader() {
                     <ArrowsClockwise size={12} className={isSwitching ? "animate-spin" : ""} />
                     {isSwitching ? "Switching" : "Switch to BNB Chain"}
                   </Button>
-                ) : (
-                  <span className="hidden h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-black/[0.07] bg-card px-2.5 text-xs font-medium text-foreground/85 shadow-[0_1px_1px_rgba(0,0,0,0.02)] xl:inline-flex">
-                    <BscChainIcon size={15} />
-                    BNB Chain
-                  </span>
                 )}
 
                 <button
@@ -239,6 +235,7 @@ export function TerminalHeader() {
                   onClick={() => setAccountOpen(true)}
                   className="pressable inline-flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border border-black/[0.09] bg-card px-2.5 text-xs shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-border-strong hover:bg-secondary/60"
                 >
+                  {!wrongChain && <BscChainIcon size={14} />}
                   {hasAgentId ? (
                     <span className="font-mono text-xs font-medium text-foreground">
                       {handle}.ai
@@ -252,29 +249,23 @@ export function TerminalHeader() {
                 </button>
               </>
             ) : (
-              <>
-                <span className="hidden h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-black/[0.07] bg-card px-2.5 text-xs font-medium text-foreground/85 shadow-[0_1px_1px_rgba(0,0,0,0.02)] lg:inline-flex">
-                  <BscChainIcon size={15} />
-                  BNB Chain
-                </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="default"
-                  onClick={() => openConnectModal?.()}
-                  className="h-8 shrink-0 whitespace-nowrap rounded-lg px-3.5 text-[12px] font-medium tracking-[-0.01em]"
-                >
-                  Connect wallet
-                </Button>
-              </>
+              <Button
+                type="button"
+                size="sm"
+                variant="default"
+                onClick={() => openConnectModal?.()}
+                className="h-8 shrink-0 whitespace-nowrap rounded-lg px-3.5 text-[12.5px] font-medium tracking-[-0.01em]"
+              >
+                Connect wallet
+              </Button>
             )}
           </div>
         </div>
 
-        {/* Mobile segmented nav */}
+        {/* Mobile navigation */}
         <nav
           aria-label="Mobile"
-          className="flex items-center gap-1 overflow-x-auto border-t border-black/[0.05] px-4 py-2 md:hidden"
+          className="flex h-10 items-center gap-5 overflow-x-auto border-t border-black/[0.05] px-4 md:hidden"
         >
           {NAV_ITEMS.map((item) => {
             const active = activeHref === item.href;
@@ -286,13 +277,19 @@ export function TerminalHeader() {
                 onClick={() => {
                   if (item.href !== pathname) setPendingHref(item.href);
                 }}
-                className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-[background-color,color] duration-150 ${
+                className={`relative inline-flex h-full shrink-0 items-center whitespace-nowrap text-xs transition-colors duration-150 ${
                   active
-                    ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.07)]"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "font-medium text-foreground"
+                    : "font-normal text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {item.label}
+                {active && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 -bottom-px h-[1.5px] bg-foreground"
+                  />
+                )}
               </Link>
             );
           })}
@@ -381,8 +378,7 @@ export function TerminalHeader() {
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-medium text-foreground">Agent ID</span>
                 {hasAgentId ? (
-                  <span className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-foreground">
-                    <CheckCircle size={13} weight="fill" />
+                  <span className="font-mono text-[11px] font-medium text-foreground">
                     Verified
                   </span>
                 ) : (

@@ -10,7 +10,6 @@ import {
   LockSimple,
   Minus,
   Plus,
-  Question,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,10 +105,9 @@ export function OnboardingModalTrigger() {
           setOpen(true);
         }}
         aria-label="How Reckon works and FAQ"
-        className="pressable inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-black/[0.08] bg-card px-2.5 text-xs font-medium text-muted-foreground shadow-[0_1px_1px_rgba(0,0,0,0.02)] hover:border-border-strong hover:text-foreground"
+        className="pressable shrink-0 whitespace-nowrap rounded-md px-1.5 py-1 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground sm:text-[13px]"
       >
-        <Question size={14} weight="regular" />
-        <span className="hidden sm:inline">How it works</span>
+        How it works
       </button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
