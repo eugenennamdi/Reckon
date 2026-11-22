@@ -2,6 +2,19 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async headers() {
+    return [
+      {
+        source: "/((?!_next/static|_next/image).*)",
+        headers: [
+          {
+            key: "Vary",
+            value: "Accept, rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+          },
+        ],
+      },
+    ];
+  },
   experimental: {
     optimizePackageImports: ["@phosphor-icons/react", "radix-ui", "viem", "wagmi"],
   },

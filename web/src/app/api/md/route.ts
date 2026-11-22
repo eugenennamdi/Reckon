@@ -13,6 +13,13 @@ import { getSignalStore } from "@/lib/x402/store";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise.catch(() => fallback),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const rawPath = url.searchParams.get("path") || "/";
@@ -24,15 +31,18 @@ export async function GET(request: Request) {
     const chain = getChainReader();
     if (normalized === "/") {
       live.currentEpochId = currentEpochId(Math.floor(Date.now() / 1000));
-      live.prices = await chain.getLivePrices().catch(() => []);
+      live.prices = await withTimeout(chain.getLivePrices(), 2500, []);
     } else if (normalized === "/leaderboard") {
-      const lb = await chain.getLeaderboard(0, 20).catch(() => ({ totalAgents: 0, agents: [] }));
+      const lb = await withTimeout(chain.getLeaderboard(0, 20), 2500, {
+        totalAgents: 0,
+        agents: [],
+      });
       live.totalAgents = lb.totalAgents;
       live.agents = lb.agents;
     } else if (normalized === "/signals") {
       live.facilitatorMode = getFacilitatorMode();
       try {
-        const list = await getSignalStore().listSignals();
+        const list = await withTimeout(getSignalStore().listSignals(), 2500, []);
         live.signalCount = list.length;
       } catch {
         live.signalCount = 0;
@@ -47,7 +57,7 @@ export async function GET(request: Request) {
     status,
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
-      Vary: "Accept",
+      Vary: "Accept, rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
       Link: buildAgentLinkHeader(siteUrl),
       "Cache-Control":
         status === 200

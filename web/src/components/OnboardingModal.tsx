@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -70,11 +71,13 @@ const FAQ_ITEMS = [
 ] as const;
 
 export function OnboardingModalTrigger() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"guide" | "faq">("guide");
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
+    if (pathname !== "/") return;
     try {
       const seen = window.localStorage.getItem(STORAGE_KEY);
       if (!seen) {
@@ -84,7 +87,7 @@ export function OnboardingModalTrigger() {
     } catch {
       // Ignore storage access restrictions (e.g. private mode).
     }
-  }, []);
+  }, [pathname]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);

@@ -78,7 +78,9 @@ export function middleware(request: NextRequest) {
     const rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = "/api/md";
     rewriteUrl.searchParams.set("path", pathname);
-    return NextResponse.rewrite(rewriteUrl);
+    const res = NextResponse.rewrite(rewriteUrl);
+    res.headers.set("Vary", "Accept");
+    return res;
   }
 
   const response = NextResponse.next();
