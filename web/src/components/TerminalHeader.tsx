@@ -166,9 +166,9 @@ export function TerminalHeader() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-black/[0.06] bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
-          {/* Left: Brand Lockup + Unboxed Navigation */}
-          <div className="flex h-full min-w-0 items-center gap-8">
+        <div className="mx-auto grid h-16 max-w-[1240px] grid-cols-[1fr_auto] items-center gap-3 px-4 sm:gap-4 sm:px-6 md:grid-cols-[1fr_auto_1fr] lg:px-8">
+          {/* Left: Brand Lockup */}
+          <div className="flex min-w-0 items-center gap-3">
             <Link href="/" className="group inline-flex shrink-0 items-center gap-2.5">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background shadow-[0_1px_3px_rgba(0,0,0,0.18)] transition-opacity duration-150 group-hover:opacity-85">
                 <ReckonMark size={17} />
@@ -177,39 +177,37 @@ export function TerminalHeader() {
                 Reckon
               </span>
             </Link>
-
-            <nav aria-label="Primary" className="hidden h-full items-center gap-6 md:flex">
-              {NAV_ITEMS.map((item) => {
-                const active = activeHref === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    prefetch={true}
-                    onClick={() => {
-                      if (item.href !== pathname) setPendingHref(item.href);
-                    }}
-                    className={`relative inline-flex h-full items-center whitespace-nowrap text-[13px] transition-colors duration-150 ${
-                      active
-                        ? "font-medium text-foreground"
-                        : "font-normal text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {item.label}
-                    {active && (
-                      <span
-                        aria-hidden="true"
-                        className="absolute inset-x-0 -bottom-px h-[1.5px] bg-foreground"
-                      />
-                    )}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
 
+          {/* Center: Floating Segmented Pill Navigation */}
+          <nav
+            aria-label="Primary"
+            className="hidden items-center gap-0.5 rounded-full bg-black/[0.045] p-1 ring-1 ring-black/[0.04] md:flex"
+          >
+            {NAV_ITEMS.map((item) => {
+              const active = activeHref === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch={true}
+                  onClick={() => {
+                    if (item.href !== pathname) setPendingHref(item.href);
+                  }}
+                  className={`pressable whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium ${
+                    active
+                      ? "bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
           {/* Right: Quiet Help Link + Single Primary Wallet Control */}
-          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+          <div className="flex min-w-0 items-center justify-end gap-3 sm:gap-4">
             <OnboardingModalTrigger />
             {!mounted ? (
               <div className="h-8 w-28 animate-pulse rounded-lg bg-black/[0.06]" />
@@ -254,7 +252,7 @@ export function TerminalHeader() {
                 size="sm"
                 variant="default"
                 onClick={() => openConnectModal?.()}
-                className="h-8 shrink-0 whitespace-nowrap rounded-lg px-3.5 text-[12.5px] font-medium tracking-[-0.01em]"
+                className="h-8 shrink-0 whitespace-nowrap rounded-lg px-3.5 text-[12px] font-medium tracking-[-0.01em]"
               >
                 Connect wallet
               </Button>
@@ -262,10 +260,10 @@ export function TerminalHeader() {
           </div>
         </div>
 
-        {/* Mobile navigation */}
+        {/* Mobile segmented nav */}
         <nav
           aria-label="Mobile"
-          className="flex h-10 items-center gap-5 overflow-x-auto border-t border-black/[0.05] px-4 md:hidden"
+          className="flex items-center gap-1 overflow-x-auto border-t border-black/[0.05] px-4 py-2 md:hidden"
         >
           {NAV_ITEMS.map((item) => {
             const active = activeHref === item.href;
@@ -277,19 +275,13 @@ export function TerminalHeader() {
                 onClick={() => {
                   if (item.href !== pathname) setPendingHref(item.href);
                 }}
-                className={`relative inline-flex h-full shrink-0 items-center whitespace-nowrap text-xs transition-colors duration-150 ${
+                className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-[background-color,color] duration-150 ${
                   active
-                    ? "font-medium text-foreground"
-                    : "font-normal text-muted-foreground hover:text-foreground"
+                    ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.07)]"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {item.label}
-                {active && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-0 bottom-0 h-[1.5px] bg-foreground"
-                  />
-                )}
               </Link>
             );
           })}
