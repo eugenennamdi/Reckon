@@ -166,7 +166,7 @@ export function TerminalHeader() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-black/[0.06] bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
           {/* Left: Brand Lockup + Unboxed Navigation */}
           <div className="flex h-full min-w-0 items-center gap-8">
             <Link href="/" className="group inline-flex shrink-0 items-center gap-2.5">
@@ -209,7 +209,7 @@ export function TerminalHeader() {
           </div>
 
           {/* Right: Quiet Help Link + Single Primary Wallet Control */}
-          <div className="flex shrink-0 items-center gap-4">
+          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
             <OnboardingModalTrigger />
             {!mounted ? (
               <div className="h-8 w-28 animate-pulse rounded-lg bg-black/[0.06]" />
@@ -287,7 +287,7 @@ export function TerminalHeader() {
                 {active && (
                   <span
                     aria-hidden="true"
-                    className="absolute inset-x-0 -bottom-px h-[1.5px] bg-foreground"
+                    className="absolute inset-x-0 bottom-0 h-[1.5px] bg-foreground"
                   />
                 )}
               </Link>

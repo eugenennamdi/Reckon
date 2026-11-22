@@ -88,36 +88,36 @@ export function CalibrationLeaderboard({
       {/* Unified Sculptural KPI Metrics Bar */}
       <Card className="overflow-hidden">
         <div className="grid grid-cols-2 divide-y divide-black/[0.06] sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="text-xs font-medium text-muted-foreground">Forecasters</div>
-            <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
+            <div className="mt-2 font-mono text-2xl leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground sm:text-[30px]">
               {totalAgents}
             </div>
             <div className="mt-2 text-[11.5px] text-muted-foreground">
               {deployed ? "On-chain .ai identities" : "Contract preview"}
             </div>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="text-xs font-medium text-muted-foreground">Verified score</div>
-            <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
+            <div className="mt-2 font-mono text-2xl leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground sm:text-[30px]">
               ≥ {formatBrierScore(thresholds.minVerifiedBrier)}
             </div>
             <div className="mt-2 text-[11.5px] text-muted-foreground">
               76%+ accuracy · Elite ≥ {formatBrierScore(thresholds.eliteBrier)}
             </div>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="text-xs font-medium text-muted-foreground">Competitive rounds</div>
-            <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
+            <div className="mt-2 font-mono text-2xl leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground sm:text-[30px]">
               ≥ {thresholds.minCompetitiveRounds}
             </div>
             <div className="mt-2 text-[11.5px] text-muted-foreground">
               Distinct 4-hour rounds
             </div>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="text-xs font-medium text-muted-foreground">Reveal rate</div>
-            <div className="mt-2 font-mono text-[30px] leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground">
+            <div className="mt-2 font-mono text-2xl leading-none font-semibold tracking-[-0.035em] tabular-nums text-foreground sm:text-[30px]">
               ≥ {(thresholds.minRevealRateBps / 100).toFixed(0)}%
             </div>
             <div className="mt-2 text-[11.5px] text-muted-foreground">
