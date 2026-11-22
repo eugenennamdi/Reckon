@@ -297,10 +297,18 @@ export class UpstashRedisSignalStore implements SignalStore {
     encryptionKey?: string;
     fetchImpl?: typeof fetch;
   }) {
-    const url = options?.url ?? process.env.UPSTASH_REDIS_REST_URL?.trim();
-    const token = options?.token ?? process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+    const url =
+      options?.url?.trim() ||
+      process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+      process.env.KV_REST_API_URL?.trim();
+    const token =
+      options?.token?.trim() ||
+      process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+      process.env.KV_REST_API_TOKEN?.trim();
     if (!url || !token) {
-      throw new Error("UpstashRedisSignalStore requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN");
+      throw new Error(
+        "UpstashRedisSignalStore requires UPSTASH_REDIS_REST_URL/TOKEN (or KV_REST_API_URL/TOKEN)",
+      );
     }
     this.url = url.replace(/\/+$/, "");
     this.token = token;
@@ -462,10 +470,13 @@ let activeStore: SignalStore | null = null;
 let activeBackend: SignalStoreBackend | null = null;
 
 function hasUpstashConfig(): boolean {
-  return Boolean(
-    process.env.UPSTASH_REDIS_REST_URL?.trim() &&
-      process.env.UPSTASH_REDIS_REST_TOKEN?.trim(),
-  );
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+    process.env.KV_REST_API_URL?.trim();
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ||
+    process.env.KV_REST_API_TOKEN?.trim();
+  return Boolean(url && token);
 }
 
 export function getSignalStoreBackendName(): SignalStoreBackend {

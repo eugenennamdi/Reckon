@@ -8,6 +8,8 @@ web/out/
 web/next-env.ts
 web/next-env.d.ts
 *.tsbuildinfo
+.vercel
+web/.vercel
 
 # Foundry
 contracts/out/
