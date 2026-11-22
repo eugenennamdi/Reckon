@@ -5,12 +5,12 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
-  CaretDown,
   ChartLineUp,
   Coins,
   LockSimple,
+  Minus,
+  Plus,
   Question,
-  Robot,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,49 +24,46 @@ const STORAGE_KEY = "reckon:onboarding:v1";
 
 const STEPS = [
   {
-    num: "01",
     icon: LockSimple,
-    title: "Seal a 4-hour prediction",
-    body: "Pick BNB, BTC, or ETH, choose your confidence (1%–99%), and stake 0.001 BNB (~$0.55) with your Binance Agent ID (name.ai). Your prediction stays hidden until prices settle.",
+    title: "Seal a prediction",
+    body: "Pick BNB, BTC, or ETH, set your confidence from 1% to 99%, and stake from 0.001 BNB. Your call stays private until the 4-hour round closes.",
   },
   {
-    num: "02",
     icon: ChartLineUp,
-    title: "Reveal & earn from accuracy",
-    body: "After the 4-hour price settles on Chainlink, reveal your prediction. Better-calibrated forecasters win a larger share of the BNB pool (0% fee), and your score stays permanently on your .ai ID.",
+    title: "Reveal and earn from accuracy",
+    body: "Once the 4-hour price settles, reveal your call. Higher accuracy earns a larger share of the pool, and every result stays permanently on your .ai identity.",
   },
   {
-    num: "03",
     icon: Coins,
-    title: "Sell or buy verified signals",
-    body: "Forecasters who prove real skill (76%+ accuracy across 3+ competitive rounds and 80%+ reveals) unlock the Signal Desk and get paid directly in USD1, USDT, or USDC.",
+    title: "Unlock verified signals",
+    body: "Forecasters with a proven on-chain track record can publish live analysis and receive stablecoin payments directly to their wallet, with 0% protocol fee.",
   },
 ] as const;
 
 const FAQ_ITEMS = [
   {
-    q: "Why do I need a Binance Agent ID (name.ai) to forecast?",
-    a: "Each person can only claim one non-transferable Agent ID. That stops anyone from spinning up 100 burner wallets to fake a winning streak or bet both sides of the same pool — making every leaderboard score real.",
+    q: "Why do I need an Agent ID (.ai) to forecast?",
+    a: "Each person can claim only one non-transferable .ai Agent ID. That prevents spinning up disposable wallets to fake winning streaks or play both sides of the same pool — keeping every leaderboard score honest.",
   },
   {
-    q: "How do I get an Agent ID and turn on Developer Mode?",
-    a: "Open the Binance App → Wallet → Agentic Wallet → Claim Agent ID (name.ai). To sign forecasts from the baw CLI or an AI agent, open Agentic Wallet Settings → Developer Mode and confirm in-app.",
+    q: "How do I get an Agent ID and enable Developer Mode?",
+    a: "Open the Binance App → Wallet → Agentic Wallet → Claim Agent ID (name.ai). To sign forecasts from the baw CLI or an AI agent, turn on Developer Mode in Agentic Wallet Settings.",
   },
   {
-    q: "Can I use MetaMask, Rabby, or a regular browser wallet?",
-    a: "Yes — any BNB Chain wallet can browse markets, inspect the leaderboard, and buy verified signals on the Signal Desk. Submitting forecasts requires a wallet that holds an Agent ID (via the Agentic Wallet baw tab or an Agent ID wallet).",
+    q: "Can I use MetaMask, Rabby, or another browser wallet?",
+    a: "Yes. Any BNB Chain wallet can browse markets, check the leaderboard, and buy verified signals. Submitting forecasts requires a wallet holding an Agent ID via the Agentic Wallet (baw) tab or an Agent ID wallet.",
   },
   {
-    q: "What happens if I forget to reveal my prediction?",
-    a: "After the 4-hour observation window ends, you have a full 4-hour window to reveal. Missing it forfeits that round's stake to forecasters who revealed and scores 0 so nobody can hide bad calls.",
+    q: "What happens if I miss the reveal window?",
+    a: "You have a full 4-hour window to reveal after the closing price settles. Missing it forfeits that round's stake to forecasters who revealed and records a 0 score so bad predictions cannot be hidden.",
   },
   {
-    q: "Can my AI agent forecast or check rounds for me?",
-    a: "Yes. Point your AI agent (Claude, Codex, Cursor, OpenClaw, or Agent OS) at https://reckon.markets/llms.txt or connect our hosted MCP server at https://reckon.markets/api/mcp. Agents always preview transactions and ask for your confirmation before spending.",
+    q: "Can my AI agent use Reckon for me?",
+    a: "Yes. Point your agent at reckon.markets/llms.txt or connect our hosted MCP server at reckon.markets/api/mcp. Agents always preview transactions and ask for your confirmation before signing.",
   },
   {
-    q: "Who controls the funds? Is Reckon affiliated with Binance?",
-    a: "Nobody controls the funds — both smart contracts are 100% ownerless, immutable, verified on BscScan, and charge 0% protocol fee. Reckon is an independent open-source protocol on BNB Chain and is not affiliated with or endorsed by Binance.",
+    q: "Who holds user funds? Is Reckon affiliated with Binance?",
+    a: "Nobody controls user funds — both smart contracts are 100% ownerless, immutable, verified on BscScan, and charge 0% fee. Reckon is an independent open-source protocol and is not affiliated with or endorsed by Binance.",
   },
 ] as const;
 
@@ -118,21 +115,17 @@ export function OnboardingModalTrigger() {
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className="max-h-[88dvh] gap-0 overflow-y-auto rounded-2xl p-0 sm:max-w-[540px]"
+          className="max-h-[88dvh] gap-0 overflow-y-auto rounded-2xl p-0 sm:max-w-[490px]"
         >
-          {/* Header */}
-          <div className="border-b border-black/[0.06] px-6 pt-6 pb-4 pr-12">
-            <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Welcome to Reckon · BNB Chain
-            </div>
-            <DialogTitle className="mt-1.5 text-xl font-semibold tracking-[-0.03em] text-foreground">
-              Predict 4-hour prices. Prove your skill.
+          {/* Clean Editorial Header */}
+          <div className="border-b border-black/[0.06] px-7 pt-7 pb-5 pr-12">
+            <DialogTitle className="text-[20px] font-semibold tracking-[-0.03em] leading-tight text-foreground">
+              How Reckon works
             </DialogTitle>
-            <DialogDescription className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Sealed crypto forecasting powered by soulbound <code className="font-mono text-foreground">.ai</code> Agent IDs — ownerless, immutable, and 0% protocol fee.
+            <DialogDescription className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
+              Sealed 4-hour price forecasts with permanent on-chain track records.
             </DialogDescription>
 
-            {/* Clean Segmented Tabs */}
             <div className="mt-4 inline-flex items-center gap-0.5 rounded-full bg-black/[0.045] p-1">
               <button
                 type="button"
@@ -143,7 +136,7 @@ export function OnboardingModalTrigger() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                How it works
+                Overview
               </button>
               <button
                 type="button"
@@ -154,75 +147,52 @@ export function OnboardingModalTrigger() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                FAQ ({FAQ_ITEMS.length})
+                FAQ
               </button>
             </div>
           </div>
 
-          {/* Body */}
+          {/* Open White Canvas — Hairline Dividers Only */}
           {tab === "guide" ? (
-            <div className="space-y-4 px-6 py-5">
-              <div className="space-y-3">
-                {STEPS.map((step) => {
-                  const Icon = step.icon;
-                  return (
-                    <div
-                      key={step.num}
-                      className="surface-well flex items-start gap-3.5 rounded-xl p-3.5"
-                    >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-foreground text-background">
-                        <Icon size={15} weight="duotone" />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-[10px] font-semibold text-muted-foreground">
-                            {step.num}
-                          </span>
-                          <h3 className="text-[13px] font-semibold text-foreground">
-                            {step.title}
-                          </h3>
-                        </div>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                          {step.body}
-                        </p>
-                      </div>
+            <div className="divide-y divide-black/[0.06] px-7 py-2">
+              {STEPS.map((step) => {
+                const Icon = step.icon;
+                return (
+                  <div key={step.title} className="flex items-start gap-4 py-4">
+                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F4F4F5] text-foreground ring-1 ring-inset ring-black/[0.05]">
+                      <Icon size={16} weight="duotone" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-[14px] font-semibold tracking-[-0.015em] text-foreground">
+                        {step.title}
+                      </h3>
+                      <p className="mt-1 text-[13px] leading-[1.55] text-muted-foreground">
+                        {step.body}
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex items-start gap-3 rounded-xl border border-black/[0.07] bg-card px-4 py-3">
-                <Robot size={16} weight="duotone" className="mt-0.5 shrink-0 text-foreground" />
-                <div className="text-xs leading-relaxed text-muted-foreground">
-                  <strong className="text-foreground">Using an AI agent?</strong> Tell it to read{" "}
-                  <code className="font-mono text-[11px] text-foreground">reckon.markets/llms.txt</code>{" "}
-                  or connect MCP at{" "}
-                  <code className="font-mono text-[11px] text-foreground">reckon.markets/api/mcp</code>.
-                </div>
-              </div>
+                  </div>
+                );
+              })}
             </div>
           ) : (
-            <div className="divide-y divide-black/[0.06] px-6 py-2">
+            <div className="divide-y divide-black/[0.06] px-7 py-2">
               {FAQ_ITEMS.map((item, idx) => {
                 const expanded = openFaq === idx;
                 return (
-                  <div key={item.q} className="py-3">
+                  <div key={item.q} className="py-3.5">
                     <button
                       type="button"
                       onClick={() => setOpenFaq(expanded ? null : idx)}
                       aria-expanded={expanded}
-                      className="flex w-full items-center justify-between gap-3 text-left text-[13px] font-medium text-foreground"
+                      className="flex w-full items-center justify-between gap-4 text-left text-[13.5px] font-medium tracking-[-0.01em] text-foreground"
                     >
                       <span>{item.q}</span>
-                      <CaretDown
-                        size={13}
-                        className={`shrink-0 text-muted-foreground transition-transform duration-150 ${
-                          expanded ? "rotate-180" : ""
-                        }`}
-                      />
+                      <span className="shrink-0 text-muted-foreground">
+                        {expanded ? <Minus size={13} weight="bold" /> : <Plus size={13} weight="bold" />}
+                      </span>
                     </button>
                     {expanded && (
-                      <p className="mt-2 pr-5 text-xs leading-relaxed text-muted-foreground">
+                      <p className="mt-2 pr-6 text-[13px] leading-[1.6] text-muted-foreground">
                         {item.a}
                       </p>
                     )}
@@ -232,39 +202,29 @@ export function OnboardingModalTrigger() {
             </div>
           )}
 
-          {/* Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-black/[0.06] bg-[#FAFAFB] px-6 py-4">
+          {/* Calm 2-Action Footer */}
+          <div className="flex items-center justify-between gap-3 border-t border-black/[0.06] bg-[#FAFAFB] px-7 py-4">
             <Link
               href="/docs"
               onClick={() => handleOpenChange(false)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="group inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              <span>Read technical docs</span>
-              <ArrowRight size={12} />
+              <span>Technical docs</span>
+              <ArrowRight
+                size={12}
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+              />
             </Link>
 
-            <div className="flex items-center gap-2">
-              {tab === "guide" && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setTab("faq")}
-                  className="h-8 rounded-lg text-xs"
-                >
-                  View FAQ
-                </Button>
-              )}
-              <Button
-                type="button"
-                size="sm"
-                variant="default"
-                onClick={() => handleOpenChange(false)}
-                className="h-8 rounded-lg px-4 text-xs"
-              >
-                Explore markets
-              </Button>
-            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="default"
+              onClick={() => handleOpenChange(false)}
+              className="h-9 rounded-lg px-5 text-xs font-medium"
+            >
+              Get started
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
